@@ -30,7 +30,7 @@ public final class Main {
 
     try {
       Runtime.getRuntime().addShutdownHook(shutdown);
-      conf = getConf("/usr/local/boomerang/conf/boomerang.conf");
+      conf = getConf("conf/boomerang.conf");
       logger = getLog4J(conf);
 
       logger.info("starting Threads.");
