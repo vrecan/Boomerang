@@ -109,18 +109,10 @@ public final class Main {
    */
   protected Properties getConf(final String filePath) throws IOException {
     Properties config = new Properties();
-    InputStream stream = null;
-    try {
-      stream = new FileInputStream(
-              filePath);
-
+    try (InputStream stream = new FileInputStream(filePath)) {
       config.load(stream);
     } catch (Exception e) {
       throw new IOException("Failed to read config file", e);
-    } finally {
-      if (stream != null) {
-        stream.close();
-      }
     }
     return config;
 
