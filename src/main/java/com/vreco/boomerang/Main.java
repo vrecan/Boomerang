@@ -14,7 +14,7 @@ import org.apache.log4j.PropertyConfigurator;
 
 /**
  *
- * @author baldrich
+ * @author Ben Aldrich
  */
 public final class Main {
 
