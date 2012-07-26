@@ -1,5 +1,6 @@
 package com.vreco.boomerang;
 
+import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -25,11 +26,7 @@ public final class Main {
   protected void start() throws JMSException {
     SimpleShutdown shutdown = SimpleShutdown.getInstance();
 
-    HashMap<Integer, Thread> loaderThreads = new HashMap<Integer, Thread>();
-    HashMap<Integer, Thread> monitorQueueThreads = new HashMap<Integer, Thread>();
-    HashMap<Integer, Thread> recoveryThreads = new HashMap<Integer, Thread>();
     Properties conf = null;
-    Thread metricsThread = null;
 
     try {
       Runtime.getRuntime().addShutdownHook(shutdown);
@@ -57,7 +54,7 @@ public final class Main {
       }
     }
 
-    gracefulShutdown(shutdown, loaderThreads, monitorQueueThreads, recoveryThreads, metricsThread, conf);
+    gracefulShutdown(shutdown, conf);
   }
 
   /**
