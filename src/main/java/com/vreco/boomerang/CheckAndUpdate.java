@@ -7,9 +7,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * Simple thread to check for messages that were not delivered by
- * the configurable timeout.
- * 
+ * Simple thread to check for messages that were not delivered by the
+ * configurable timeout.
+ *
  * @author Ben Aldrich
  */
 public class CheckAndUpdate implements Runnable {
@@ -25,7 +25,7 @@ public class CheckAndUpdate implements Runnable {
       for (Path file : stream) {
         System.out.println("File: " + file.getFileName());
       }
-    } catch(IOException e) {
+    } catch (IOException e) {
       System.out.println(e.getStackTrace().toString());
     }
   }

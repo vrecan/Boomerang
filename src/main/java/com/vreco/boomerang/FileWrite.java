@@ -1,9 +1,15 @@
 package com.vreco.boomerang;
 
+import com.vreco.boomerang.message.Message;
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  *
@@ -13,6 +19,7 @@ public final class FileWrite {
 
   private static Logger logger = Logger.getLogger(FileWrite.class);
   private static FileWrite instance = null;
+  private ObjectMapper mapper = new ObjectMapper();  
 
   protected FileWrite() {
   }
@@ -29,19 +36,14 @@ public final class FileWrite {
    *
    * @throws IOException
    */
-  public synchronized void write(String message, String path) throws IOException {
-    //create files by hour
-    SimpleDateFormat dfm = new SimpleDateFormat("MM-dd-yyyy-HH");
-    String dateString = dfm.format(new Date());
-    File file = new File(path + "/" + "temptext" + "_" + dateString + ".json");
-    //use buffering & append to the file instead of overwritting it.
-    Writer output = new BufferedWriter(new FileWriter(file, true));
-    try {
-      output.write("temptext");
-      output.write("\n");
-      logger.info("message written to : " + file.getAbsolutePath());
-    } finally {
-      output.close();
-    }
+  public synchronized void write(Message msg, String path) throws IOException {
+    
+    String jsonMsg = mapper.writeValueAsString(msg);
+    BufferedWriter writer =
+      Files.newBufferedWriter(
+      FileSystems.getDefault().getPath(".", path + "/" + msg.getUUID()),
+      Charset.forName("UTF-8"),
+      StandardOpenOption.CREATE);
+    writer.write(jsonMsg, 0, jsonMsg.length());
   }
 }
