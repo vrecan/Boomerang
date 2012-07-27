@@ -46,6 +46,7 @@ public class MessageTest extends TestCase {
     String jsonString = "{\"processName\":\"proc\",\"something\":\"new\"}";
     Message msg = mapper.readValue(jsonString, Message.class);
     Assert.assertEquals("proc", msg.getProcessName());
+    Assert.assertEquals(null, msg.getUUID());
   }  
   
 }

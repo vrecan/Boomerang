@@ -83,9 +83,9 @@ public final class Main {
    *
    * @param threads
    */
-  public static void startThreads(HashMap<Integer, Thread> threads) {
-    for (Map.Entry<Integer, Thread> map : threads.entrySet()) {
-      map.getValue().start();
+  public static void startThreads(HashMap<Thread, Long> threads) {
+    for (Map.Entry<Thread, Long> map : threads.entrySet()) {
+      map.getKey().start();
     }
   }
 
@@ -94,9 +94,9 @@ public final class Main {
    *
    * @param threads
    */
-  public static void joinThreads(HashMap<Integer, Thread> threads, long millis) throws InterruptedException {
-    for (Map.Entry<Integer, Thread> map : threads.entrySet()) {
-      map.getValue().join(millis);
+  public static void joinThreads(HashMap<Thread, Long> threads) throws InterruptedException {
+    for (Map.Entry<Thread, Long> map : threads.entrySet()) {
+      map.getKey().join(map.getValue());
     }
   }
 
