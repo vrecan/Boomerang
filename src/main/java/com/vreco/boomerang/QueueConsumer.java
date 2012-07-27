@@ -32,17 +32,17 @@ public class QueueConsumer implements Runnable {
       }
     } catch (JMSException ex) {
       Logger.getLogger(QueueConsumer.class.getName()).log(Level.SEVERE, null, ex);
-    } 
+    }
 
   }
- 
+
   protected void consume(TextMessage mqMsg) {
-        try {
-          Message msg = mapper.readValue(mqMsg.getText(), Message.class);
-          System.out.println(msg.toString());
-        } catch (JMSException | IOException e) {
-          System.out.print(e.getStackTrace().toString());
-        }
-    
+    try {
+      Message msg = mapper.readValue(mqMsg.getText(), Message.class);
+      System.out.println(msg.toString());
+    } catch (JMSException | IOException e) {
+      System.out.print(e.getStackTrace().toString());
+    }
+
   }
 }
