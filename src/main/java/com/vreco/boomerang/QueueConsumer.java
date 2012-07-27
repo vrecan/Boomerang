@@ -8,8 +8,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 /**
@@ -18,7 +16,6 @@ import org.codehaus.jackson.map.ObjectMapper;
  */
 public class QueueConsumer implements Runnable {
 
-  Consumer consumer = new Consumer();
   SimpleShutdown shutdown = SimpleShutdown.getInstance();
   ObjectMapper mapper = new ObjectMapper();
 
@@ -27,23 +24,18 @@ public class QueueConsumer implements Runnable {
 
   @Override
   public void run() {
-    try {
-      connect();
+    try (Consumer consumer = new Consumer()) {
+      consumer.setTimeout(1000);
       while (!shutdown.isShutdown()) {
-        TextMessage mqMsg = consumer.getTextMessage();        
-
+        TextMessage mqMsg = consumer.getTextMessage();
+        consume(mqMsg);
       }
     } catch (JMSException ex) {
       Logger.getLogger(QueueConsumer.class.getName()).log(Level.SEVERE, null, ex);
-    }
+    } 
 
   }
-
-  protected void connect() throws JMSException {
-    consumer.connect("vm://localhost", "testQueue");
-    consumer.setTimeout(1000);
-  }
-  
+ 
   protected void consume(TextMessage mqMsg) {
         try {
           Message msg = mapper.readValue(mqMsg.getText(), Message.class);
