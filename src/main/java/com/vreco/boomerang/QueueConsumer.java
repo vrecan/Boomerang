@@ -26,9 +26,14 @@ public class QueueConsumer implements Runnable {
   public void run() {
     try (Consumer consumer = new Consumer()) {
       consumer.setTimeout(1000);
+      consumer.connect("vm://localhost", "tempqueue");      
       while (!shutdown.isShutdown()) {
         TextMessage mqMsg = consumer.getTextMessage();
-        consume(mqMsg);
+        if(mqMsg != null) {
+          consume(mqMsg);
+        } else {
+          System.out.println("No messages on queue...");
+        }
       }
     } catch (JMSException ex) {
       Logger.getLogger(QueueConsumer.class.getName()).log(Level.SEVERE, null, ex);
@@ -39,7 +44,8 @@ public class QueueConsumer implements Runnable {
   protected void consume(TextMessage mqMsg) {
     try {
       Message msg = mapper.readValue(mqMsg.getText(), Message.class);
-      System.out.println(msg.toString());
+      System.out.println(mapper.writeValueAsString(msg));
+      mqMsg.acknowledge();
     } catch (JMSException | IOException e) {
       System.out.print(e.getStackTrace().toString());
     }
