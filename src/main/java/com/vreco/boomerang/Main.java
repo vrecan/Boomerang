@@ -1,20 +1,18 @@
 package com.vreco.boomerang;
 
+import com.vreco.boomerang.conf.Conf;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import javax.jms.JMSException;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 /**
  *
- * @author baldrich
+ * @author Ben Aldrich
  */
 public final class Main {
 
@@ -26,15 +24,16 @@ public final class Main {
   protected void start() throws JMSException {
     SimpleShutdown shutdown = SimpleShutdown.getInstance();
 
-    Properties conf = null;
-
+    Conf conf = null;
+    HashMap<Thread, Long> threads = new HashMap();
     try {
       Runtime.getRuntime().addShutdownHook(shutdown);
-      conf = getConf("/usr/local/boomerang/conf/boomerang.conf");
+      conf = new Conf("conf/boomerang.conf");
       logger = getLog4J(conf);
 
       logger.info("starting Threads.");
-      //start threads here
+      threads = getThreads();
+      startThreads(threads);
     } catch (Throwable e) {
       shutdown.setShutdown(true);
       System.out.print(e);
@@ -54,7 +53,7 @@ public final class Main {
       }
     }
 
-    gracefulShutdown(shutdown, conf);
+    gracefulShutdown(shutdown, threads);
   }
 
   /**
@@ -62,20 +61,23 @@ public final class Main {
    *
    * @param shutdown
    */
-  protected void gracefulShutdown(final SimpleShutdown shutdown, Properties conf) {
+  protected void gracefulShutdown(final SimpleShutdown shutdown, final HashMap<Thread, Long> threads) {
     shutdown.setShutdown(true);
-    if (conf == null) {
-      conf = new Properties();
-      conf.setProperty("loader.join.wait", "60000");
-    }
     logger.info("starting graceful shutdown...");
-    long joinTime = Long.parseLong(conf.getProperty("loader.join.wait", "30000"));
     try {
-      //join threads here
+      joinThreads(threads);
     } catch (Exception e) {
       logger.error("failed to join thread", e);
     }
     shutdown.setFinished(true);
+  }
+
+  public static HashMap<Thread, Long> getThreads() {
+    HashMap<Thread, Long> threads = new HashMap();
+    threads.put(new Thread(new CheckAndUpdate()), Long.parseLong("30000"));
+    threads.put(new Thread(new QueueConsumer()), Long.parseLong("10000"));
+    threads.put(new Thread(new ResendExpired()), Long.parseLong("10000"));
+    return threads;
   }
 
   /**
@@ -83,9 +85,9 @@ public final class Main {
    *
    * @param threads
    */
-  public static void startThreads(HashMap<Integer, Thread> threads) {
-    for (Map.Entry<Integer, Thread> map : threads.entrySet()) {
-      map.getValue().start();
+  public static void startThreads(HashMap<Thread, Long> threads) {
+    for (Map.Entry<Thread, Long> map : threads.entrySet()) {
+      map.getKey().start();
     }
   }
 
@@ -94,36 +96,10 @@ public final class Main {
    *
    * @param threads
    */
-  public static void joinThreads(HashMap<Integer, Thread> threads, long millis) throws InterruptedException {
-    for (Map.Entry<Integer, Thread> map : threads.entrySet()) {
-      map.getValue().join(millis);
+  public static void joinThreads(HashMap<Thread, Long> threads) throws InterruptedException {
+    for (Map.Entry<Thread, Long> map : threads.entrySet()) {
+      map.getKey().join(map.getValue());
     }
-  }
-
-  /**
-   * Get our properties file.
-   *
-   * @param filePath
-   * @return
-   * @throws IOException
-   */
-  protected Properties getConf(final String filePath) throws IOException {
-    Properties config = new Properties();
-    InputStream stream = null;
-    try {
-      stream = new FileInputStream(
-              filePath);
-
-      config.load(stream);
-    } catch (Exception e) {
-      throw new IOException("Failed to read config file", e);
-    } finally {
-      if (stream != null) {
-        stream.close();
-      }
-    }
-    return config;
-
   }
 
   /**
@@ -131,8 +107,8 @@ public final class Main {
    *
    * @throws ComplianceException
    */
-  protected Logger getLog4J(final Properties conf) throws IOException {
-    File log4jFile = new File(conf.getProperty("log4j.conf", "conf/log4j.conf"));
+  protected Logger getLog4J(final Conf conf) throws IOException {
+    File log4jFile = new File(conf.getValue("log4j.conf", "conf/log4j.conf"));
     if (!log4jFile.exists()) {
       throw new IOException("No log4j conf file found: " + log4jFile.toString());
     }
