@@ -28,7 +28,7 @@ public final class Main {
     HashMap<Thread, Long> threads = new HashMap();
     try {
       Runtime.getRuntime().addShutdownHook(shutdown);
-      conf = new Conf("conf/boomerang.conf");      
+      conf = new Conf("conf/boomerang.conf");
       logger = getLog4J(conf);
 
       logger.info("starting Threads.");
@@ -76,6 +76,7 @@ public final class Main {
     HashMap<Thread, Long> threads = new HashMap();
     threads.put(new Thread(new CheckAndUpdate()), Long.parseLong("30000"));
     threads.put(new Thread(new QueueConsumer()), Long.parseLong("10000"));
+    threads.put(new Thread(new ResendExpired()), Long.parseLong("10000"));
     return threads;
   }
 

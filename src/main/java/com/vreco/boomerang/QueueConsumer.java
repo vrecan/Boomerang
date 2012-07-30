@@ -18,6 +18,7 @@ public class QueueConsumer implements Runnable {
 
   SimpleShutdown shutdown = SimpleShutdown.getInstance();
   ObjectMapper mapper = new ObjectMapper();
+  StoreMessage store = new StoreMessage("localhost", "superslack");
 
   public QueueConsumer() {
   }
@@ -26,10 +27,10 @@ public class QueueConsumer implements Runnable {
   public void run() {
     try (Consumer consumer = new Consumer()) {
       consumer.setTimeout(1000);
-      consumer.connect("vm://localhost", "tempqueue");      
+      consumer.connect("vm://localhost", "tempqueue");
       while (!shutdown.isShutdown()) {
         TextMessage mqMsg = consumer.getTextMessage();
-        if(mqMsg != null) {
+        if (mqMsg != null) {
           consume(mqMsg);
         } else {
           System.out.println("No messages on queue...");
@@ -45,6 +46,7 @@ public class QueueConsumer implements Runnable {
     try {
       Message msg = mapper.readValue(mqMsg.getText(), Message.class);
       System.out.println(mapper.writeValueAsString(msg));
+      store.set(msg.getUUID(), mapper.writeValueAsString(msg));
       mqMsg.acknowledge();
     } catch (JMSException | IOException e) {
       System.out.print(e.getStackTrace().toString());
