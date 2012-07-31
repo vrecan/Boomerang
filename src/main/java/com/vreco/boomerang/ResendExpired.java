@@ -21,21 +21,21 @@ public class ResendExpired implements Runnable {
   @Override
   public void run() {
     while (!shutdown.isShutdown()) {
-      Set<String> keys = store.getKeys();
-      for (String k : keys) {
-        String rawMsg = store.get(k);
-        if (rawMsg != null) {
-          try {
-            Message msg = mapper.readValue(rawMsg, Message.class);
-            System.out.println(mapper.writeValueAsString(msg));
-            //check date in msg here and resend if it's expired.
-          } catch (Exception ex) {
-            System.out.print(ex.getStackTrace().toString());
-          }
-        }
-      }
+//      Set<String> keys = store.getKeys();
+//      for (String k : keys) {
+//        String rawMsg = store.get(k);
+//        if (rawMsg != null) {
+//          try {
+//            Message msg = mapper.readValue(rawMsg, Message.class);
+//            System.out.println(mapper.writeValueAsString(msg));
+//            //check date in msg here and resend if it's expired.
+//          } catch (Exception ex) {
+//            System.out.print(ex.getStackTrace().toString());
+//          }
+//        }
+      //   }
       try {
-        Thread.sleep(100);
+        Thread.sleep(1000);
       } catch (Exception e) {
         //ignore
       }

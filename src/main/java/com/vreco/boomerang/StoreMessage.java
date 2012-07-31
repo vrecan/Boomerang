@@ -1,9 +1,8 @@
 package com.vreco.boomerang;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Response;
@@ -13,58 +12,77 @@ import redis.clients.jedis.Response;
  *
  * @author Ben Aldrich
  */
-public class StoreMessage implements AutoCloseable{
+public class StoreMessage implements AutoCloseable {
 
-  Jedis jedis;
-  String hostname;
+  final Jedis jedis;
+  final String appName;
+  final protected SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
 
-  public StoreMessage(String serverHostname, String hostname) {
-    jedis = new Jedis(serverHostname);
-    this.hostname = hostname;
+  public StoreMessage(String connectionHostName, String appName) {
+    jedis = new Jedis(connectionHostName);
+    this.appName = appName;
   }
 
-  public void set(String key, String value) {
-    jedis.hset(hostname, key, value);
+  public void set(String propKey, String value, Date date) {
+    jedis.hset(getHashKey(appName, date), propKey, value);
   }
-  
-  public void batchSet(Map<String, String> batch) {
+
+  public void batchSet(Map<String, String> batch) throws IOException {
     Pipeline pipe = jedis.pipelined();
     ArrayList<Response<Long>> responses = new ArrayList();
     for (Map.Entry<String, String> message : batch.entrySet()) {
-      responses.add(pipe.hset(hostname, message.getKey(), message.getValue()));
+      //responses.add(pipe.hset(getHashKey(appName, date), message.getKey(), message.getValue()));
     }
+
     pipe.sync();
-    pipe.exec();
-    for(Response<Long> r : responses) {
-      r.get();
+
+    for (Response<Long> r : responses) {
+      if (r.get().intValue() != 1) {
+        throw new IOException("Failed to insert batch!");
+      }
     }
 
   }
 
-  public String get(String key) {
-    List<String> hvals = jedis.hmget(hostname, key);
-    if(hvals.isEmpty()) {
+  public String get(String fieldKey, Date date) {
+    List<String> hvals = jedis.hmget(getHashKey(appName, date), fieldKey);
+    if (hvals.isEmpty()) {
       return null;
     }
     return hvals.get(0);
   }
 
-  public void delete(String key) {
-    jedis.hdel(hostname, key);
+  public String get(String HashKey, String fieldKey) {
+    List<String> hvals = jedis.hmget(HashKey, fieldKey);
+    if (hvals.isEmpty()) {
+      return null;
+    }
+    return hvals.get(0);
+
   }
-  
-  public Set<String> getKeys() {
-    return jedis.hkeys(hostname);
+
+  public void delete(String fieldKey, Date date) {
+    jedis.hdel(getHashKey(appName, date), fieldKey);
   }
-  
-  public boolean exists(String key) {
-    return jedis.hexists(hostname, key);
+
+  public Set<String> getKeys(Date date) {
+    return jedis.hkeys(getHashKey(appName, date));
   }
-  
+
+  public boolean exists(String fieldKey, Date date) {
+    return jedis.hexists(getHashKey(appName, date), fieldKey);
+  }
+
   public void deleteAll() {
     jedis.flushDB();
   }
-  
+
+  protected String getHashKey(String prefix, Date date) {
+    StringBuilder sb = new StringBuilder(prefix);
+    sb.append(sdf.format(date));
+    return sb.toString();
+  }
+
   @Override
   public void close() {
     jedis.disconnect();

@@ -4,6 +4,9 @@ import com.vreco.boomerang.message.Message;
 import com.vreco.util.mq.Consumer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.IOException;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.jms.JMSException;
@@ -44,11 +47,12 @@ public class QueueConsumer implements Runnable {
 
   protected void consume(TextMessage mqMsg) {
     try {
-      Message msg = mapper.readValue(mqMsg.getText(), Message.class);
+      HashMap<String, Object> msg = mapper.readValue(mqMsg.getText(), HashMap.class);
+      Date date = store.sdf.parse((String)msg.get("date"));
       System.out.println(mapper.writeValueAsString(msg));
-      store.set(msg.getUUID(), mapper.writeValueAsString(msg));
+      store.set((String)msg.get("uuid"), mapper.writeValueAsString(msg), date);
       mqMsg.acknowledge();
-    } catch (JMSException | IOException e) {
+    } catch (Exception e) {
       System.out.print(e.getStackTrace().toString());
     }
 
