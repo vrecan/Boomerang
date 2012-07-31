@@ -66,8 +66,9 @@ public class StoreMessageTest {
   public void testExists() {
     Date date = new Date();
     store.set("1", "{woo}", date);
+    boolean exists = store.exists("1", date);
     store.deleteAll();
-    Assert.assertTrue(store.exists("1", date));    
+    Assert.assertTrue(exists); 
   }
 
   @Test
