@@ -1,10 +1,8 @@
 package com.vreco.boomerang;
 
-import com.vreco.boomerang.message.Message;
 import com.vreco.util.mq.Consumer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
-import java.io.IOException;
-import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -21,7 +19,8 @@ public class QueueConsumer implements Runnable {
 
   SimpleShutdown shutdown = SimpleShutdown.getInstance();
   ObjectMapper mapper = new ObjectMapper();
-  StoreMessage store = new StoreMessage("localhost", "superslack");
+  DataStore store = new RedisStore("localhost", "superslack");
+  final protected SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
 
   public QueueConsumer() {
   }
@@ -48,7 +47,7 @@ public class QueueConsumer implements Runnable {
   protected void consume(TextMessage mqMsg) {
     try {
       HashMap<String, Object> msg = mapper.readValue(mqMsg.getText(), HashMap.class);
-      Date date = store.sdf.parse((String)msg.get("date"));
+      Date date = sdf.parse((String)msg.get("date"));
       System.out.println(mapper.writeValueAsString(msg));
       store.set((String)msg.get("uuid"), mapper.writeValueAsString(msg), date);
       mqMsg.acknowledge();

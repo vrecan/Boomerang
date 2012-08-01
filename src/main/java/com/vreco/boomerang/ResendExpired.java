@@ -12,7 +12,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 public class ResendExpired implements Runnable {
 
   SimpleShutdown shutdown = SimpleShutdown.getInstance();
-  StoreMessage store = new StoreMessage("localhost", "superslack");
+  RedisStore store = new RedisStore("localhost", "superslack");
   ObjectMapper mapper = new ObjectMapper();
 
   public void ResendExpired() {

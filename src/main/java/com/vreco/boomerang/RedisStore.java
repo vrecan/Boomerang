@@ -12,22 +12,24 @@ import redis.clients.jedis.Response;
  *
  * @author Ben Aldrich
  */
-public class StoreMessage implements AutoCloseable {
+public class RedisStore implements DataStore {
 
   final Jedis jedis;
   final String appName;
   final protected SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
 
-  public StoreMessage(String connectionHostName, String appName) {
+  public RedisStore(String connectionHostName, String appName) {
     jedis = new Jedis(connectionHostName);
     this.appName = appName;
   }
 
+  @Override
   public void set(String propKey, String value, Date date) {
     jedis.hset(getHashKey(appName, date), propKey, value);
   }
 
-  public void batchSet(Map<String, String> batch) throws IOException {
+  @Override
+  public void batchSet(Map<String, String> batch) {
     Pipeline pipe = jedis.pipelined();
     ArrayList<Response<Long>> responses = new ArrayList();
     for (Map.Entry<String, String> message : batch.entrySet()) {
@@ -38,12 +40,13 @@ public class StoreMessage implements AutoCloseable {
 
     for (Response<Long> r : responses) {
       if (r.get().intValue() != 1) {
-        throw new IOException("Failed to insert batch!");
+        //throw new IOException("Failed to insert batch!");
       }
     }
 
   }
 
+  @Override
   public String get(String fieldKey, Date date) {
     List<String> hvals = jedis.hmget(getHashKey(appName, date), fieldKey);
     if (hvals.isEmpty()) {
@@ -52,6 +55,7 @@ public class StoreMessage implements AutoCloseable {
     return hvals.get(0);
   }
 
+  @Override
   public String get(String HashKey, String fieldKey) {
     List<String> hvals = jedis.hmget(HashKey, fieldKey);
     if (hvals.isEmpty()) {
@@ -61,14 +65,17 @@ public class StoreMessage implements AutoCloseable {
 
   }
 
+  @Override
   public void delete(String fieldKey, Date date) {
     jedis.hdel(getHashKey(appName, date), fieldKey);
   }
 
+  @Override
   public Set<String> getKeys(Date date) {
     return jedis.hkeys(getHashKey(appName, date));
   }
 
+  @Override
   public boolean exists(String fieldKey, Date date) {
     return jedis.hexists(getHashKey(appName, date), fieldKey);
   }

@@ -11,7 +11,7 @@ import org.junit.*;
  */
 public class StoreMessageTest {
 
-  StoreMessage store;
+  RedisStore store;
 
   public StoreMessageTest() {
   }
@@ -26,7 +26,7 @@ public class StoreMessageTest {
 
   @Before
   public void setUp() {
-    store = new StoreMessage("localhost", "Boomerang");
+    store = new RedisStore("localhost", "Boomerang");
   }
 
   @After
@@ -34,7 +34,7 @@ public class StoreMessageTest {
   }
 
   /**
-   * Test of get method, of class StoreMessage.
+   * Test of get method, of class RedisStore.
    */
   @Test
   public void testSimple() {
@@ -46,7 +46,7 @@ public class StoreMessageTest {
   }
 
   /**
-   * Test of getKeys method, of class StoreMessage.
+   * Test of getKeys method, of class RedisStore.
    */
   @Test
   public void testSetKeysSimple() {
@@ -60,7 +60,7 @@ public class StoreMessageTest {
 
 
   /**
-   * Test of exists method, of class StoreMessage.
+   * Test of exists method, of class RedisStore.
    */
   @Test
   public void testExists() {
