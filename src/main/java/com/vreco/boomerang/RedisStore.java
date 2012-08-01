@@ -1,6 +1,5 @@
 package com.vreco.boomerang;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import redis.clients.jedis.Jedis;
@@ -12,7 +11,7 @@ import redis.clients.jedis.Response;
  *
  * @author Ben Aldrich
  */
-public class RedisStore implements DataStore {
+public class RedisStore implements DataStore, AutoCloseable {
 
   final Jedis jedis;
   final String appName;

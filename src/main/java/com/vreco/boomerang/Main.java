@@ -75,7 +75,7 @@ public final class Main {
   public static HashMap<Thread, Long> getThreads() {
     HashMap<Thread, Long> threads = new HashMap();
     threads.put(new Thread(new CheckAndUpdate()), Long.parseLong("30000"));
-    threads.put(new Thread(new QueueConsumer()), Long.parseLong("10000"));
+    threads.put(new Thread(new MessageConsumer()), Long.parseLong("10000"));
     threads.put(new Thread(new ResendExpired()), Long.parseLong("10000"));
     return threads;
   }

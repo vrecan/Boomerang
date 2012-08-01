@@ -5,6 +5,7 @@ import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.jms.JMSException;
@@ -15,14 +16,14 @@ import org.codehaus.jackson.map.ObjectMapper;
  *
  * @author Ben Aldrich
  */
-public class QueueConsumer implements Runnable {
+public class MessageConsumer implements Runnable {
 
   SimpleShutdown shutdown = SimpleShutdown.getInstance();
   ObjectMapper mapper = new ObjectMapper();
   DataStore store = new RedisStore("localhost", "superslack");
-  final protected SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+  final protected SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 
-  public QueueConsumer() {
+  public MessageConsumer() {
   }
 
   @Override
@@ -39,21 +40,24 @@ public class QueueConsumer implements Runnable {
         }
       }
     } catch (JMSException ex) {
-      Logger.getLogger(QueueConsumer.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(MessageConsumer.class.getName()).log(Level.SEVERE, null, ex);
     }
 
   }
 
   protected void consume(TextMessage mqMsg) {
     try {
+      String uuid = UUID.randomUUID().toString();
+      Date date = new Date();
       HashMap<String, Object> msg = mapper.readValue(mqMsg.getText(), HashMap.class);
-      Date date = sdf.parse((String)msg.get("date"));
+      msg.put("boomDate", sdf.format(date));
+      msg.put("boomUid", uuid);
       System.out.println(mapper.writeValueAsString(msg));
-      store.set((String)msg.get("uuid"), mapper.writeValueAsString(msg), date);
+      store.set(uuid, mapper.writeValueAsString(msg), date);
       mqMsg.acknowledge();
     } catch (Exception e) {
       System.out.print(e.getStackTrace().toString());
     }
-
+    
   }
 }
