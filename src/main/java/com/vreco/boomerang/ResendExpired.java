@@ -1,8 +1,7 @@
 package com.vreco.boomerang;
 
-import com.vreco.boomerang.message.Message;
+import com.vreco.boomerang.conf.Conf;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
-import java.util.Set;
 import org.codehaus.jackson.map.ObjectMapper;
 
 /**
@@ -11,11 +10,13 @@ import org.codehaus.jackson.map.ObjectMapper;
  */
 public class ResendExpired implements Runnable {
 
-  SimpleShutdown shutdown = SimpleShutdown.getInstance();
+  final SimpleShutdown shutdown = SimpleShutdown.getInstance();
   RedisStore store = new RedisStore("localhost", "superslack");
-  ObjectMapper mapper = new ObjectMapper();
+  final ObjectMapper mapper = new ObjectMapper();
+  final Conf conf;
 
-  public void ResendExpired() {
+  public ResendExpired(Conf conf) {
+    this.conf = conf;
   }
 
   @Override

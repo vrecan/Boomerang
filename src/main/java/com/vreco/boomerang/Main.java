@@ -32,7 +32,7 @@ public final class Main {
       logger = getLog4J(conf);
 
       logger.info("starting Threads.");
-      threads = getThreads();
+      threads = getThreads(conf);
       startThreads(threads);
     } catch (Throwable e) {
       shutdown.setShutdown(true);
@@ -72,11 +72,10 @@ public final class Main {
     shutdown.setFinished(true);
   }
 
-  public static HashMap<Thread, Long> getThreads() {
+  public static HashMap<Thread, Long> getThreads(Conf conf) {
     HashMap<Thread, Long> threads = new HashMap();
-    threads.put(new Thread(new CheckAndUpdate()), Long.parseLong("30000"));
-    threads.put(new Thread(new MessageConsumer()), Long.parseLong("10000"));
-    threads.put(new Thread(new ResendExpired()), Long.parseLong("10000"));
+    threads.put(new Thread(new MessageConsumer(conf)), Long.parseLong("10000"));
+    threads.put(new Thread(new ResendExpired(conf)), Long.parseLong("10000"));
     return threads;
   }
 

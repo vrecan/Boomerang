@@ -1,15 +1,18 @@
 package com.vreco.boomerang;
 
+import com.vreco.boomerang.conf.Conf;
 import com.vreco.util.mq.Consumer;
+import com.vreco.util.mq.Producer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 /**
@@ -22,42 +25,47 @@ public class MessageConsumer implements Runnable {
   ObjectMapper mapper = new ObjectMapper();
   DataStore store = new RedisStore("localhost", "superslack");
   final protected SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+  final Conf conf;
 
-  public MessageConsumer() {
+  public MessageConsumer(Conf conf) {
+    this.conf = conf;
   }
 
   @Override
   public void run() {
-    try (Consumer consumer = new Consumer()) {
-      consumer.setTimeout(1000);
-      consumer.connect("vm://localhost", "tempqueue");
+    try (Consumer consumer = new Consumer(conf.getValue("mq.connection.url"));
+            Producer producer = new Producer(conf.getValue("mq.connection.url"))) {
+      consumer.setTimeout(conf.getLongValue("mq.connection.timeout", Long.parseLong("2000")));
+      consumer.connect("queue", conf.getValue("mq.processing.queue"));
       while (!shutdown.isShutdown()) {
         TextMessage mqMsg = consumer.getTextMessage();
         if (mqMsg != null) {
-          consume(mqMsg);
+          try {
+            HashMap<String, Object> msg = mapper.readValue(mqMsg.getText(), HashMap.class);
+            msg = setAndStoreMsg(msg);
+            String queue = (String) msg.get(conf.getValue("boomerang.producer.label"));
+            producer.connect("queue", queue);
+            producer.sendMessage(mapper.writeValueAsString(msg));
+            mqMsg.acknowledge();
+          } catch (JMSException | IOException e) {
+            System.out.print(e.getCause().toString());
+          }
         } else {
           System.out.println("No messages on queue...");
         }
       }
-    } catch (JMSException ex) {
-      Logger.getLogger(MessageConsumer.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (JMSException e) {
+      System.out.print(e.getCause().toString());
     }
 
   }
 
-  protected void consume(TextMessage mqMsg) {
-    try {
-      String uuid = UUID.randomUUID().toString();
-      Date date = new Date();
-      HashMap<String, Object> msg = mapper.readValue(mqMsg.getText(), HashMap.class);
-      msg.put("boomDate", sdf.format(date));
-      msg.put("boomUid", uuid);
-      System.out.println(mapper.writeValueAsString(msg));
-      store.set(uuid, mapper.writeValueAsString(msg), date);
-      mqMsg.acknowledge();
-    } catch (Exception e) {
-      System.out.print(e.getStackTrace().toString());
-    }
-    
+  protected HashMap<String, Object> setAndStoreMsg(HashMap<String, Object> msg) throws JsonMappingException, JsonGenerationException, IOException {
+    String uuid = UUID.randomUUID().toString();
+    Date date = new Date();
+    msg.put(conf.getValue("boomerang.date.label"), sdf.format(date));
+    msg.put("boomerang.uuid.label", uuid);
+    store.set(uuid, mapper.writeValueAsString(msg), date);
+    return msg;
   }
 }

@@ -23,10 +23,10 @@ public class Conf {
     }
 
   }
-  
+
   public Conf(Properties conf) throws IOException {
     this.conf = conf;
-  }  
+  }
 
   public void validateFields() {
   }
@@ -54,8 +54,15 @@ public class Conf {
 
   public int getIntValue(String key, int defaultValue) {
     try {
-      int i = Integer.parseInt(conf.getProperty(key));
-      return i;
+      return Integer.parseInt(conf.getProperty(key));
+    } catch (Exception e) {
+      return defaultValue;
+    }
+  }
+
+  public Long getLongValue(String key, Long defaultValue) {
+    try {
+      return Long.parseLong(conf.getProperty(key));
     } catch (Exception e) {
       return defaultValue;
     }
