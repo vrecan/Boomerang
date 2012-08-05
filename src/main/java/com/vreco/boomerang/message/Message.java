@@ -1,30 +1,58 @@
 package com.vreco.boomerang.message;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import java.util.*;
 
 /**
  * This is the POJO mapping for a message object.
+ *
  * @author Ben Aldrich
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Message {
-  
-  private String processName;
+
+  private HashMap<String, Object> msg;
   private String uuid;
+  private Date date;
+  private ArrayList<String> queues = new ArrayList();
 
-  public void setProcessName(String processName) {
-    this.processName = processName;
-  }
-  
-  public String getProcessName(){
-    return processName;
+  public Message(String sQueues) {
+    this.uuid = UUID.randomUUID().toString();
+    this.date = new Date();
+    String[] split = sQueues.split(",");
+    queues.addAll(Arrays.asList(split));
   }
 
-  public void setUUID(String UUID) {
-    this.uuid = UUID;
+  /**
+   * @return the msg
+   */
+  public HashMap<String, Object> getMsg() {
+    return msg;
   }
-  
-  public String getUUID() {
+
+  /**
+   * @return the uuid
+   */
+  public String getUuid() {
     return uuid;
+  }
+
+  /**
+   * @return the date
+   */
+  public Date getDate() {
+    return date;
+  }
+
+  /**
+   * @return the queues
+   */
+  public ArrayList<String> getQueues() {
+    return queues;
+  }
+
+  /**
+   * @param queues the queues to set
+   */
+  public void setQueues(ArrayList<String> queues) {
+    this.queues = queues;
   }
 }

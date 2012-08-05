@@ -1,5 +1,7 @@
 package com.vreco.boomerang;
 
+import com.vreco.boomerang.message.ResponseMessage;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import redis.clients.jedis.Jedis;
@@ -61,7 +63,6 @@ public class RedisStore implements DataStore, AutoCloseable {
       return null;
     }
     return hvals.get(0);
-
   }
 
   @Override
@@ -92,5 +93,27 @@ public class RedisStore implements DataStore, AutoCloseable {
   @Override
   public void close() {
     jedis.disconnect();
+  }
+
+  @Override
+  public String get(ResponseMessage msg) throws ParseException {
+    List<String> hvals;
+    hvals = jedis.hmget(getHashKey(appName, sdf.parse(msg.getBoomDate())), msg.getUuid());
+
+    if (hvals.isEmpty()) {
+      return null;
+    }
+    return hvals.get(0);
+
+  }
+
+  @Override
+  public void delete(ResponseMessage msg) throws ParseException {
+    jedis.hdel(getHashKey(appName, sdf.parse(msg.getBoomDate())), msg.getUuid());
+  }
+
+  @Override
+  public boolean exists(ResponseMessage msg) throws ParseException {
+    return jedis.hexists(getHashKey(appName, sdf.parse(msg.getBoomDate())), msg.getUuid());
   }
 }
