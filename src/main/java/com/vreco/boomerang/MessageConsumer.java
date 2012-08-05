@@ -23,9 +23,9 @@ public class MessageConsumer implements Runnable {
 
   SimpleShutdown shutdown = SimpleShutdown.getInstance();
   ObjectMapper mapper = new ObjectMapper();
-  DataStore store = new RedisStore("localhost", "superslack");
   final protected SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
   final Conf conf;
+  DataStore store;
 
   public MessageConsumer(Conf conf) {
     this.conf = conf;
@@ -35,6 +35,7 @@ public class MessageConsumer implements Runnable {
   public void run() {
     try (Consumer consumer = new Consumer(conf.getValue("mq.connection.url"));
             Producer producer = new Producer(conf.getValue("mq.connection.url"))) {
+      store = new RedisStore(conf.getValue("data.redis.url"), conf.getValue("appName"));
       consumer.setTimeout(conf.getLongValue("mq.connection.timeout", Long.parseLong("2000")));
       consumer.connect("queue", conf.getValue("mq.processing.queue"));
       while (!shutdown.isShutdown()) {

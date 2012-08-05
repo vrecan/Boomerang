@@ -8,7 +8,7 @@ import java.util.Set;
  *
  * @author Ben Aldrich
  */
-public interface DataStore {
+public interface DataStore extends AutoCloseable{
   public void set(String propKey, String value, Date date);
   public void batchSet(Map<String, String> batch);
   public String get(String fieldKey, Date date);
@@ -16,6 +16,7 @@ public interface DataStore {
   public void delete(String fieldKey, Date date);
   public Set<String> getKeys(Date date);
   public boolean exists(String fieldKey, Date date);
+  @Override
   public void close();
 
 }
