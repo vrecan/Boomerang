@@ -1,30 +1,85 @@
 package com.vreco.boomerang.message;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import com.vreco.boomerang.conf.Conf;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * This is the POJO mapping for a message object.
+ *
  * @author Ben Aldrich
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Message {
-  
-  private String processName;
-  private String uuid;
 
-  public void setProcessName(String processName) {
-    this.processName = processName;
-  }
-  
-  public String getProcessName(){
-    return processName;
+  private final HashMap<String, Object> msg;
+  private final String uuid;
+  private final Date date;
+  private ArrayList<String> queues = new ArrayList();
+  private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+
+  public Message(HashMap<String, Object> msg, final Conf conf) {
+    this.msg = msg;
+    this.uuid = UUID.randomUUID().toString();
+    this.date = new Date();
+
+    String sQueues = (String) msg.get(conf.getValue("boomerang.producer.label"));
+    String[] split = sQueues.split(",");
+    queues.addAll(Arrays.asList(split));
+
+    msg.put(conf.getValue("boomerang.date.label"), sdf.format(date));
+    msg.put(conf.getValue("boomerang.uuid.label"), uuid);
   }
 
-  public void setUUID(String UUID) {
-    this.uuid = UUID;
+  /**
+   * @return the msg
+   */
+  public HashMap<String, Object> getMsg() {
+    return msg;
   }
-  
-  public String getUUID() {
+
+  /**
+   * @return the uuid
+   */
+  public String getUuid() {
     return uuid;
+  }
+
+  /**
+   * @return the date
+   */
+  public Date getDate() {
+    return date;
+  }
+
+  /**
+   * @return the queues
+   */
+  public ArrayList<String> getQueues() {
+    return queues;
+  }
+
+  /**
+   *
+   * @return the queues as a string for mq destination
+   */
+  public String getDestination() {
+    StringBuilder sb = new StringBuilder();
+    int length = queues.size();
+    int count = 0;
+    for (String queue : queues) {
+      count++;
+      sb.append(queue);
+      if (count < length) {
+        sb.append(",");
+      }
+    }
+    return sb.toString();
+  }
+
+  /**
+   * @param queues the queues to set
+   */
+  public void setQueues(final ArrayList<String> queues) {
+    this.queues = queues;
   }
 }

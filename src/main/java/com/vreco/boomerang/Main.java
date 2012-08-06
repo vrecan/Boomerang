@@ -1,6 +1,7 @@
 package com.vreco.boomerang;
 
 import com.vreco.boomerang.conf.Conf;
+import com.vreco.boomerang.response.ResponseConsumer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.File;
 import java.io.IOException;
@@ -75,6 +76,7 @@ public final class Main {
   public static HashMap<Thread, Long> getThreads(Conf conf) {
     HashMap<Thread, Long> threads = new HashMap();
     threads.put(new Thread(new MessageConsumer(conf)), Long.parseLong("10000"));
+    threads.put(new Thread(new ResponseConsumer(conf)), Long.parseLong("10000"));
     threads.put(new Thread(new ResendExpired(conf)), Long.parseLong("10000"));
     return threads;
   }
