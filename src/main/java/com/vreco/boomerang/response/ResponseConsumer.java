@@ -1,9 +1,9 @@
 package com.vreco.boomerang.response;
 
-import com.vreco.boomerang.message.ResponseMessage;
 import com.vreco.boomerang.DataStore;
 import com.vreco.boomerang.RedisStore;
 import com.vreco.boomerang.conf.Conf;
+import com.vreco.boomerang.message.ResponseMessage;
 import com.vreco.util.mq.Consumer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.IOException;
@@ -57,10 +57,10 @@ public class ResponseConsumer implements Runnable {
   protected void processResponse(ResponseMessage msg) {
     try {
       System.out.println("processing response...");
+      System.out.println("ResponseMsg: " + mapper.writeValueAsString(msg));
       if (msg.isSuccess() && !msg.getDate().isEmpty()) {
         String result = store.get(msg);
         System.out.println("deleting: " + result);
-        System.out.println("ResponseMsg: " + msg.toString());
         store.delete(msg);
       } else if (msg.isResetTimer()) {
         //delete and re add with new date
