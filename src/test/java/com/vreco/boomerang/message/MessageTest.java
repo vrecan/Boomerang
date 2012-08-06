@@ -25,28 +25,28 @@ public class MessageTest extends TestCase {
     super.tearDown();
   }
 
-  public void testCreateExpectedMsg() throws IOException {
-    ObjectMapper mapper = new ObjectMapper();
-    String jsonString = "{\"processName\":\"proc\",\"uuid\":\"uuid\"}";
-    Message msg = mapper.readValue(jsonString, Message.class);
-    Assert.assertEquals("proc", msg.getProcessName());
-    Assert.assertEquals("uuid", msg.getUUID());
-  }
-  
-  public void testCreateMsgExtraFields() throws IOException {
-    ObjectMapper mapper = new ObjectMapper();
-    String jsonString = "{\"processName\":\"proc\",\"uuid\":\"uuid\", \"something\":\"new\"}";
-    Message msg = mapper.readValue(jsonString, Message.class);
-    Assert.assertEquals("proc", msg.getProcessName());
-    Assert.assertEquals("uuid", msg.getUUID());
-  }
-  
-  public void testCreateMsgMissingUuid() throws IOException {
-    ObjectMapper mapper = new ObjectMapper();
-    String jsonString = "{\"processName\":\"proc\",\"something\":\"new\"}";
-    Message msg = mapper.readValue(jsonString, Message.class);
-    Assert.assertEquals("proc", msg.getProcessName());
-    Assert.assertEquals(null, msg.getUUID());
-  }  
+//  public void testCreateExpectedMsg() throws IOException {
+//    ObjectMapper mapper = new ObjectMapper();
+//    String jsonString = "{\"processName\":\"proc\",\"uuid\":\"uuid\"}";
+//    Message msg = mapper.readValue(jsonString, Message.class);
+//    Assert.assertEquals("proc", msg.getProcessName());
+//    Assert.assertEquals("uuid", msg.getUUID());
+//  }
+//  
+//  public void testCreateMsgExtraFields() throws IOException {
+//    ObjectMapper mapper = new ObjectMapper();
+//    String jsonString = "{\"processName\":\"proc\",\"uuid\":\"uuid\", \"something\":\"new\"}";
+//    Message msg = mapper.readValue(jsonString, Message.class);
+//    Assert.assertEquals("proc", msg.getProcessName());
+//    Assert.assertEquals("uuid", msg.getUUID());
+//  }
+//  
+//  public void testCreateMsgMissingUuid() throws IOException {
+//    ObjectMapper mapper = new ObjectMapper();
+//    String jsonString = "{\"processName\":\"proc\",\"something\":\"new\"}";
+//    Message msg = mapper.readValue(jsonString, Message.class);
+//    Assert.assertEquals("proc", msg.getProcessName());
+//    Assert.assertEquals(null, msg.getUUID());
+//  }  
   
 }

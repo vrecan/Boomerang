@@ -1,5 +1,7 @@
 package com.vreco.boomerang.message;
 
+import com.vreco.boomerang.conf.Conf;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -9,16 +11,23 @@ import java.util.*;
  */
 public class Message {
 
-  private HashMap<String, Object> msg;
-  private String uuid;
-  private Date date;
+  private final HashMap<String, Object> msg;
+  private final String uuid;
+  private final Date date;
   private ArrayList<String> queues = new ArrayList();
+  private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 
-  public Message(String sQueues) {
+  public Message(HashMap<String, Object> msg, final Conf conf) {
+    this.msg = msg;
     this.uuid = UUID.randomUUID().toString();
     this.date = new Date();
+
+    String sQueues = (String) msg.get(conf.getValue("boomerang.producer.label"));
     String[] split = sQueues.split(",");
     queues.addAll(Arrays.asList(split));
+
+    msg.put(conf.getValue("boomerang.date.label"), sdf.format(date));
+    msg.put(conf.getValue("boomerang.uuid.label"), uuid);
   }
 
   /**
@@ -50,9 +59,27 @@ public class Message {
   }
 
   /**
+   *
+   * @return the queues as a string for mq destination
+   */
+  public String getDestination() {
+    StringBuilder sb = new StringBuilder();
+    int length = queues.size();
+    int count = 0;
+    for (String queue : queues) {
+      count++;
+      sb.append(queue);
+      if (count < length) {
+        sb.append(",");
+      }
+    }
+    return sb.toString();
+  }
+
+  /**
    * @param queues the queues to set
    */
-  public void setQueues(ArrayList<String> queues) {
+  public void setQueues(final ArrayList<String> queues) {
     this.queues = queues;
   }
 }

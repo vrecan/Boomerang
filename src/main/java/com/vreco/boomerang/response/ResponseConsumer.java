@@ -20,7 +20,7 @@ public class ResponseConsumer implements Runnable {
 
   SimpleShutdown shutdown = SimpleShutdown.getInstance();
   ObjectMapper mapper = new ObjectMapper();
-  DataStore store = new RedisStore("localhost", "superslack");
+  DataStore store;
   final protected SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
   final Conf conf;
 
@@ -31,6 +31,7 @@ public class ResponseConsumer implements Runnable {
   @Override
   public void run() {
     try (Consumer consumer = new Consumer(conf.getValue("mq.connection.url"))) {
+      store = new RedisStore(conf.getValue("data.redis.url"), conf.getValue("app.name"));
       consumer.setTimeout(conf.getLongValue("mq.connection.timeout", Long.parseLong("2000")));
       consumer.connect("queue", conf.getValue("mq.response.queue"));
       while (!shutdown.isShutdown()) {
@@ -56,8 +57,11 @@ public class ResponseConsumer implements Runnable {
   protected void processResponse(ResponseMessage msg) {
     try {
       System.out.println("processing response...");
-      if (msg.isSuccess() && !msg.getBoomDate().isEmpty()) {
-        store.delete(msg.getUuid(), sdf.parse(msg.getBoomDate()));
+      if (msg.isSuccess() && !msg.getDate().isEmpty()) {
+        String result = store.get(msg);
+        System.out.println("deleting: " + result);
+        System.out.println("ResponseMsg: " + msg.toString());
+        store.delete(msg);
       } else if (msg.isResetTimer()) {
         //delete and re add with new date
       }

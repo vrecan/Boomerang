@@ -8,7 +8,7 @@ package com.vreco.boomerang.message;
 public class ResponseMessage {
 
   private String uuid;
-  private String boomDate;
+  private String date;
   private String queue;
   private boolean success = false;
   private boolean resetTimer = false;
@@ -56,17 +56,17 @@ public class ResponseMessage {
   }
 
   /**
-   * @return the boomDate
+   * @return the date
    */
-  public String getBoomDate() {
-    return boomDate;
+  public String getDate() {
+    return date;
   }
 
   /**
-   * @param boomDate the boomDate to set
+   * @param date the date to set
    */
-  public void setBoomDate(String boomDate) {
-    this.boomDate = boomDate;
+  public void setDate(String date) {
+    this.date = date;
   }
 
   /**

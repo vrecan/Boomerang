@@ -1,17 +1,15 @@
 package com.vreco.boomerang;
 
 import com.vreco.boomerang.conf.Conf;
+import com.vreco.boomerang.message.Message;
 import com.vreco.util.mq.Consumer;
 import com.vreco.util.mq.Producer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.UUID;
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
-import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -21,9 +19,8 @@ import org.codehaus.jackson.map.ObjectMapper;
  */
 public class MessageConsumer implements Runnable {
 
-  SimpleShutdown shutdown = SimpleShutdown.getInstance();
-  ObjectMapper mapper = new ObjectMapper();
-  final protected SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+  final SimpleShutdown shutdown = SimpleShutdown.getInstance();
+  final ObjectMapper mapper = new ObjectMapper();
   final Conf conf;
   DataStore store;
 
@@ -35,18 +32,17 @@ public class MessageConsumer implements Runnable {
   public void run() {
     try (Consumer consumer = new Consumer(conf.getValue("mq.connection.url"));
             Producer producer = new Producer(conf.getValue("mq.connection.url"))) {
-      store = new RedisStore(conf.getValue("data.redis.url"), conf.getValue("appName"));
+      store = new RedisStore(conf.getValue("data.redis.url"), conf.getValue("app.name"));
       consumer.setTimeout(conf.getLongValue("mq.connection.timeout", Long.parseLong("2000")));
       consumer.connect("queue", conf.getValue("mq.processing.queue"));
       while (!shutdown.isShutdown()) {
         TextMessage mqMsg = consumer.getTextMessage();
         if (mqMsg != null) {
           try {
-            HashMap<String, Object> msg = mapper.readValue(mqMsg.getText(), HashMap.class);
-            msg = setAndStoreMsg(msg);
-            String queue = (String) msg.get(conf.getValue("boomerang.producer.label"));
-            producer.connect("queue", queue);
-            producer.sendMessage(mapper.writeValueAsString(msg));
+            Message msg = getMessage(mqMsg.getText());
+            store.set(msg);
+            producer.connect("queue", msg.getDestination());
+            producer.sendMessage(mapper.writeValueAsString(msg.getMsg()));
             mqMsg.acknowledge();
           } catch (JMSException | IOException e) {
             System.out.print(e.getCause().toString());
@@ -61,12 +57,13 @@ public class MessageConsumer implements Runnable {
 
   }
 
-  protected HashMap<String, Object> setAndStoreMsg(HashMap<String, Object> msg) throws JsonMappingException, JsonGenerationException, IOException {
-    String uuid = UUID.randomUUID().toString();
-    Date date = new Date();
-    msg.put(conf.getValue("boomerang.date.label"), sdf.format(date));
-    msg.put("boomerang.uuid.label", uuid);
-    store.set(uuid, mapper.writeValueAsString(msg), date);
-    return msg;
+  /**
+   *
+   * @param mqMsg
+   * @return
+   */
+  protected Message getMessage(final String mqMsg) throws JsonParseException, JsonMappingException, IOException {
+    HashMap<String, Object> hMsg = mapper.readValue(mqMsg, HashMap.class);
+    return new Message(hMsg, conf);
   }
 }
