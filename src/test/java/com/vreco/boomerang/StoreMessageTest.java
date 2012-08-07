@@ -1,5 +1,6 @@
 package com.vreco.boomerang;
 
+import com.vreco.boomerang.datastore.RedisStore;
 import com.vreco.boomerang.message.Message;
 import java.text.ParseException;
 import java.util.Date;

@@ -1,4 +1,4 @@
-package com.vreco.boomerang;
+package com.vreco.boomerang.datastore;
 
 import com.vreco.boomerang.message.Message;
 import com.vreco.boomerang.message.ResponseMessage;

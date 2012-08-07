@@ -1,5 +1,7 @@
 package com.vreco.boomerang;
 
+import com.vreco.boomerang.datastore.RedisStore;
+import com.vreco.boomerang.datastore.DataStore;
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.message.Message;
 import com.vreco.util.mq.Consumer;

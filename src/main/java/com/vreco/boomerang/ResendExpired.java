@@ -1,5 +1,6 @@
 package com.vreco.boomerang;
 
+import com.vreco.boomerang.datastore.RedisStore;
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import org.codehaus.jackson.map.ObjectMapper;

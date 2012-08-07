@@ -1,9 +1,9 @@
 package com.vreco.boomerang.response;
 
-import com.vreco.boomerang.DataStore;
+import com.vreco.boomerang.datastore.DataStore;
 import com.vreco.boomerang.Main;
 import com.vreco.boomerang.MessageConsumer;
-import com.vreco.boomerang.RedisStore;
+import com.vreco.boomerang.datastore.RedisStore;
 import com.vreco.boomerang.message.ResponseMessage;
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.conf.MockConf;
