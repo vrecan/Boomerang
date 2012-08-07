@@ -163,6 +163,18 @@ public class RedisStore implements DataStore, AutoCloseable {
     final String key = getHashKey(appName, msg.getUuid(), dateFormat.parse(msg.getDate()));
     jedis.hdel(key, msg.getUuid());
   }
+  
+  /**
+   * Delete our stored message.
+   *
+   * @param msg
+   * @throws ParseException
+   */
+  @Override
+  public void delete(Message msg) throws ParseException {
+    final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
+    jedis.hdel(key, msg.getUuid());
+  }  
 
   /**
    * Delete all data in the db.

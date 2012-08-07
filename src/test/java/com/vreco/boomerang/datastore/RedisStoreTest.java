@@ -49,12 +49,15 @@ public class RedisStoreTest {
    * Test of set method, of class RedisStore.
    */
   @Test
-  public void testSet() throws Exception {
+  public void testSetExistDelete() throws Exception {
     DataStore store = new RedisStore("localhost", conf.getValue("app.name"));
     HashMap<String, Object> map = new HashMap();
     Message msg = new Message(map, conf);
     store.set(msg);
-    store.get(msg);
+    Assert.assertNotNull(store.get(msg));
+    Assert.assertTrue(store.exists(msg));
+    store.delete(msg);
+    Assert.assertFalse(store.exists(msg));
   }
 
   /**
