@@ -98,10 +98,12 @@ public class RedisStore implements DataStore, AutoCloseable {
     final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
     final String zkey = getZKey();
     final String zvalue = getZValue(msg.getDate(), msg.getUuid());
+    final boolean hexists = jedis.hexists(key, msg.getUuid());
     final boolean zexists = jedis.zscore(zkey, zvalue) != null;
-    if (jedis.hexists(key, msg.getUuid()) && zexists) {
+    if (hexists || zexists) {
       return true;
-    } else {
+    }
+    else {
       return false;
     }
   }
@@ -117,10 +119,12 @@ public class RedisStore implements DataStore, AutoCloseable {
     final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
     final String zkey = getZKey();
     final String zvalue = getZValue(msg.getDate(), msg.getUuid());
-
-    if (jedis.hexists(key, msg.getUuid()) && jedis.zscore(zkey, zvalue) != null) {
+    final boolean hexists = jedis.hexists(key, msg.getUuid());
+    final boolean zexists = jedis.zscore(zkey, zvalue) != null;
+    if (hexists || zexists) {
       return true;
-    } else {
+    }
+    else {
       return false;
     }
   }
