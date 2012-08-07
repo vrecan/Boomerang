@@ -73,6 +73,19 @@ public class RedisStore implements DataStore, AutoCloseable {
     final String key = getHashKey(appName, msg.getUuid(), dateFormat.parse(msg.getDate()));
     return jedis.hget(key, msg.getUuid());
   }
+  
+  /**
+   * Get our stored message from redis.
+   *
+   * @param msg
+   * @return
+   * @throws ParseException
+   */
+  @Override
+  public String get(final Message msg) throws ParseException {
+    final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
+    return jedis.hget(key, msg.getUuid());
+  }  
 
   /**
    * Check to see if a message exists in the data store.

@@ -23,8 +23,10 @@ public class Message {
     this.date = new Date();
 
     String sQueues = (String) msg.get(conf.getValue("boomerang.producer.label"));
-    String[] split = sQueues.split(",");
-    queues.addAll(Arrays.asList(split));
+    if(sQueues != null) {
+      String[] split = sQueues.split(",");
+      queues.addAll(Arrays.asList(split));
+    }
 
     msg.put(conf.getValue("boomerang.date.label"), sdf.format(date));
     msg.put(conf.getValue("boomerang.uuid.label"), uuid);

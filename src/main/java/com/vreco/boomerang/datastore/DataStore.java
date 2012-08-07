@@ -19,6 +19,7 @@ public interface DataStore extends AutoCloseable {
   public void batchSet(Collection<Message> msgs);
 
   public String get(ResponseMessage msg) throws ParseException;
+  public String get(Message msg) throws ParseException;
 
   public void delete(ResponseMessage msg) throws ParseException;
 
