@@ -40,11 +40,13 @@ public class RedisStoreTest {
 
   @Before
   public void setUp() {
-    //store.deleteAll();
+    store = new RedisStore("localhost", conf.getValue("app.name"));
+    store.deleteAll();
   }
 
   @After
   public void tearDown() {
+    store.close();
   }
 
   /**
@@ -97,32 +99,6 @@ public class RedisStoreTest {
     fail("The test case is a prototype.");
   }
 
-  /**
-   * Test of delete method, of class RedisStore.
-   */
-  @Test
-  public void testDelete() throws Exception {
-    System.out.println("delete");
-    ResponseMessage msg = null;
-    RedisStore instance = null;
-    instance.delete(msg);
-    // TODO review the generated test code and remove the default call to fail.
-    fail("The test case is a prototype.");
-  }
-
-  /**
-   * Test of getZKey method, of class RedisStore.
-   */
-  @Test
-  public void testGetZKey() {
-    System.out.println("getZKey");
-    RedisStore instance = null;
-    String expResult = "";
-    String result = instance.getZKey();
-    assertEquals(expResult, result);
-    // TODO review the generated test code and remove the default call to fail.
-    fail("The test case is a prototype.");
-  }
 
   /**
    * Test of getZValue method, of class RedisStore.
@@ -140,32 +116,4 @@ public class RedisStoreTest {
     fail("The test case is a prototype.");
   }
 
-  /**
-   * Test of getHashKey method, of class RedisStore.
-   */
-  @Test
-  public void testGetHashKey() {
-    System.out.println("getHashKey");
-    String prefix = "";
-    String uuid = "";
-    Date date = null;
-    RedisStore instance = null;
-    String expResult = "";
-    String result = instance.getHashKey(prefix, uuid, date);
-    assertEquals(expResult, result);
-    // TODO review the generated test code and remove the default call to fail.
-    fail("The test case is a prototype.");
-  }
-
-  /**
-   * Test of close method, of class RedisStore.
-   */
-  @Test
-  public void testClose() {
-    System.out.println("close");
-    RedisStore instance = null;
-    instance.close();
-    // TODO review the generated test code and remove the default call to fail.
-    fail("The test case is a prototype.");
-  }
 }
