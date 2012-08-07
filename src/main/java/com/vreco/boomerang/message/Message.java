@@ -15,7 +15,7 @@ public class Message {
   private final String uuid;
   private final Date date;
   private ArrayList<String> queues = new ArrayList();
-  private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+  final protected SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 
   public Message(HashMap<String, Object> msg, final Conf conf) {
     this.msg = msg;
@@ -28,7 +28,7 @@ public class Message {
       queues.addAll(Arrays.asList(split));
     }
 
-    msg.put(conf.getValue("boomerang.date.label"), sdf.format(date));
+    msg.put(conf.getValue("boomerang.date.label"), dateFormat.format(date));
     msg.put(conf.getValue("boomerang.uuid.label"), uuid);
   }
 

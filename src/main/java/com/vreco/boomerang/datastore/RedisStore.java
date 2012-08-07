@@ -1,14 +1,14 @@
 package com.vreco.boomerang.datastore;
 
-import com.google.common.primitives.Bytes;
-import com.google.common.primitives.Ints;
 import com.vreco.boomerang.message.Message;
 import com.vreco.boomerang.message.ResponseMessage;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Set;
 import org.codehaus.jackson.map.ObjectMapper;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Response;
@@ -25,7 +25,6 @@ public class RedisStore implements DataStore, AutoCloseable {
   final String appName;
   final ObjectMapper mapper = new ObjectMapper();
   final protected SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-  final protected SimpleDateFormat scoreFormat = new SimpleDateFormat("MMddHHmm");
 
   /**
    * Initialize data store.
@@ -70,10 +69,10 @@ public class RedisStore implements DataStore, AutoCloseable {
    */
   @Override
   public String get(final ResponseMessage msg) throws ParseException {
-    final String key = getHashKey(appName, msg.getUuid(), dateFormat.parse(msg.getDate()));
+    final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
     return jedis.hget(key, msg.getUuid());
   }
-  
+
   /**
    * Get our stored message from redis.
    *
@@ -85,7 +84,7 @@ public class RedisStore implements DataStore, AutoCloseable {
   public String get(final Message msg) throws ParseException {
     final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
     return jedis.hget(key, msg.getUuid());
-  }  
+  }
 
   /**
    * Check to see if a message exists in the data store.
@@ -96,8 +95,15 @@ public class RedisStore implements DataStore, AutoCloseable {
    */
   @Override
   public boolean exists(final ResponseMessage msg) throws ParseException {
-    final String key = getHashKey(appName, msg.getUuid(), dateFormat.parse(msg.getDate()));
-    return jedis.hexists(key, msg.getUuid());
+    final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
+    final String zkey = getZKey();
+    final String zvalue = getZValue(msg.getDate(), msg.getUuid());
+    final boolean zexists = jedis.zscore(zkey, zvalue) != null;
+    if (jedis.hexists(key, msg.getUuid()) && zexists) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -109,7 +115,14 @@ public class RedisStore implements DataStore, AutoCloseable {
   @Override
   public boolean exists(final Message msg) {
     final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
-    return jedis.hexists(key, msg.getUuid());
+    final String zkey = getZKey();
+    final String zvalue = getZValue(msg.getDate(), msg.getUuid());
+
+    if (jedis.hexists(key, msg.getUuid()) && jedis.zscore(zkey, zvalue) != null) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -160,10 +173,13 @@ public class RedisStore implements DataStore, AutoCloseable {
    */
   @Override
   public void delete(ResponseMessage msg) throws ParseException {
-    final String key = getHashKey(appName, msg.getUuid(), dateFormat.parse(msg.getDate()));
+    final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
+    final String zkey = getZKey();
+    final String zvalue = getZValue(msg.getDate(), msg.getUuid());
+    jedis.zrem(zkey, zvalue);
     jedis.hdel(key, msg.getUuid());
   }
-  
+
   /**
    * Delete our stored message.
    *
@@ -173,8 +189,11 @@ public class RedisStore implements DataStore, AutoCloseable {
   @Override
   public void delete(Message msg) throws ParseException {
     final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
+    final String zkey = getZKey();
+    final String zvalue = getZValue(msg.getDate(), msg.getUuid());
+    jedis.zrem(zkey, zvalue);
     jedis.hdel(key, msg.getUuid());
-  }  
+  }
 
   /**
    * Delete all data in the db.
@@ -183,19 +202,23 @@ public class RedisStore implements DataStore, AutoCloseable {
     jedis.flushDB();
   }
   
+  protected long zSize() {
+    return jedis.zcard(getZKey());
+  }
+
   protected String getZKey() {
     StringBuilder sb = new StringBuilder(appName);
     sb.append(":uuidByDate");
     return sb.toString();
   }
-  
-  protected String getZValue(Date date, String uuid){
+
+  protected String getZValue(Date date, String uuid) {
     StringBuilder sb = new StringBuilder();
     sb.append(date.getTime());
     sb.append(":");
     sb.append(uuid);
     return sb.toString();
-  }  
+  }
 
   /**
    * Build hash key.

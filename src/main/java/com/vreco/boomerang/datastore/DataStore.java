@@ -23,7 +23,6 @@ public interface DataStore extends AutoCloseable {
 
   public void delete(ResponseMessage msg) throws ParseException;
   public void delete(Message msg) throws ParseException;
-
   public Set<String> getKeys(Date date);
 
   public boolean exists(Message msg);

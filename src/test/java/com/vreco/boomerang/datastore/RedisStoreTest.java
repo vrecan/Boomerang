@@ -19,12 +19,16 @@ import static org.junit.Assert.*;
  * @author Ben Aldrich
  */
 public class RedisStoreTest {
+
   final protected SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
   final SimpleShutdown shutdown = SimpleShutdown.getInstance();
   Conf conf;
-    public RedisStoreTest() throws IOException {
-      conf = new MockConf().conf;
-    }
+  RedisStore store;
+
+  public RedisStoreTest() throws IOException {
+    conf = new MockConf().conf;
+    store = new RedisStore("localhost", conf.getValue("app.name"));
+  }
 
   @BeforeClass
   public static void setUpClass() throws Exception {
@@ -34,23 +38,21 @@ public class RedisStoreTest {
   public static void tearDownClass() throws Exception {
   }
 
-    @Before
-    public void setUp() {
-    }
+  @Before
+  public void setUp() {
+    //store.deleteAll();
+  }
 
-    @After
-    public void tearDown() {
-    }
-
-
- 
+  @After
+  public void tearDown() {
+  }
 
   /**
    * Test of set method, of class RedisStore.
    */
   @Test
-  public void testSetExistDelete() throws Exception {
-    DataStore store = new RedisStore("localhost", conf.getValue("app.name"));
+  public void testSetExistDeleteMessage() throws Exception {
+
     HashMap<String, Object> map = new HashMap();
     Message msg = new Message(map, conf);
     store.set(msg);
@@ -58,6 +60,28 @@ public class RedisStoreTest {
     Assert.assertTrue(store.exists(msg));
     store.delete(msg);
     Assert.assertFalse(store.exists(msg));
+    Assert.assertEquals(0, store.zSize());
+  }
+
+  /**
+   * Test of set method, of class RedisStore.
+   */
+  @Test
+  public void testSetExistDeleteResponseMessage() throws Exception {
+
+    HashMap<String, Object> map = new HashMap();
+    Message msg = new Message(map, conf);
+    store.set(msg);
+    ResponseMessage rMsg = new ResponseMessage();
+    rMsg.setDate(msg.getDate());
+    rMsg.setUuid(msg.getUuid());
+    rMsg.setQueue((String) msg.getDestination());
+    rMsg.setSuccess(true);
+    Assert.assertNotNull(store.get(rMsg));
+    Assert.assertTrue(store.exists(rMsg));
+    store.delete(rMsg);
+    Assert.assertFalse(store.exists(rMsg));
+    Assert.assertEquals(0, store.zSize());
   }
 
   /**
@@ -144,5 +168,4 @@ public class RedisStoreTest {
     // TODO review the generated test code and remove the default call to fail.
     fail("The test case is a prototype.");
   }
-
 }

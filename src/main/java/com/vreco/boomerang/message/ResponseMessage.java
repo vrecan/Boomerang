@@ -1,5 +1,7 @@
 package com.vreco.boomerang.message;
 
+import java.util.Date;
+
 /**
  * This is a POJO to convert our json response message.
  *
@@ -8,7 +10,7 @@ package com.vreco.boomerang.message;
 public class ResponseMessage {
 
   private String uuid;
-  private String date;
+  private Date date;
   private String queue;
   private boolean success = false;
   private boolean resetTimer = false;
@@ -58,14 +60,15 @@ public class ResponseMessage {
   /**
    * @return the date
    */
-  public String getDate() {
+  public Date getDate() {
     return date;
   }
 
   /**
    * @param date the date to set
    */
-  public void setDate(String date) {
+  public void setDate(Date date) {
+    System.out.println("response Date: " + date.getTime());
     this.date = date;
   }
 
