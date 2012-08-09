@@ -13,14 +13,17 @@ public class Message {
 
   private final HashMap<String, Object> msg;
   private final String uuid;
-  private final Date date;
+  private Date date;
   private ArrayList<String> queues = new ArrayList();
-  final protected SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+  final protected SimpleDateFormat msgDateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+  private final Conf conf;
+  private int RetryCount = 0;
 
   public Message(HashMap<String, Object> msg, final Conf conf) {
     this.msg = msg;
     this.uuid = UUID.randomUUID().toString();
     this.date = new Date();
+    this.conf = conf;
 
     String sQueues = (String) msg.get(conf.getValue("boomerang.producer.label"));
     if(sQueues != null) {
@@ -28,7 +31,7 @@ public class Message {
       queues.addAll(Arrays.asList(split));
     }
 
-    msg.put(conf.getValue("boomerang.date.label"), dateFormat.format(date));
+    msg.put(conf.getValue("boomerang.date.label"), msgDateFormat.format(date));
     msg.put(conf.getValue("boomerang.uuid.label"), uuid);
   }
 
@@ -51,6 +54,15 @@ public class Message {
    */
   public Date getDate() {
     return date;
+  }
+  
+  /** 
+   * Set the date.
+   * @param Date
+   */
+  public void setDate(Date date) {
+    this.date = date;
+    msg.put(conf.getValue("boomerang.date.label"), msgDateFormat.format(date));
   }
 
   /**
@@ -83,5 +95,20 @@ public class Message {
    */
   public void setQueues(final ArrayList<String> queues) {
     this.queues = queues;
+  }
+
+  /**
+   * @return the RetryCount
+   */
+  public int getRetryCount() {
+    return RetryCount;
+  }
+
+  /**
+   * @param RetryCount the RetryCount to set
+   */
+  public void setRetryCount(int RetryCount) {
+    this.RetryCount = RetryCount;
+    msg.put(conf.getValue("boomerang.retry.label"), msgDateFormat.format(date));    
   }
 }

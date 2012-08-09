@@ -30,7 +30,7 @@ public class ResponseConsumer implements Runnable {
   @Override
   public void run() {
     try (Consumer consumer = new Consumer(conf.getValue("mq.connection.url"))) {
-      store = new RedisStore(conf.getValue("data.redis.url"), conf.getValue("app.name"));
+      store = new RedisStore(conf);
       consumer.setTimeout(conf.getLongValue("mq.connection.timeout", Long.parseLong("2000")));
       consumer.connect("queue", conf.getValue("mq.response.queue"));
       while (!shutdown.isShutdown()) {

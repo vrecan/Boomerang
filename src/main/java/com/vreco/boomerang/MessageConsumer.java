@@ -34,7 +34,7 @@ public class MessageConsumer implements Runnable {
   public void run() {
     try (Consumer consumer = new Consumer(conf.getValue("mq.connection.url"));
             Producer producer = new Producer(conf.getValue("mq.connection.url"))) {
-      store = new RedisStore(conf.getValue("data.redis.url"), conf.getValue("app.name"));
+      store = new RedisStore(conf);
       consumer.setTimeout(conf.getLongValue("mq.connection.timeout", Long.parseLong("2000")));
       consumer.connect("queue", conf.getValue("mq.processing.queue"));
       while (!shutdown.isShutdown()) {

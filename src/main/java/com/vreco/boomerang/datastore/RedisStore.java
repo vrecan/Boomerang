@@ -1,14 +1,12 @@
 package com.vreco.boomerang.datastore;
 
+import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.message.Message;
 import com.vreco.boomerang.message.ResponseMessage;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Set;
+import java.util.*;
 import org.codehaus.jackson.map.ObjectMapper;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Response;
@@ -25,6 +23,7 @@ public class RedisStore implements DataStore, AutoCloseable {
   final String appName;
   final ObjectMapper mapper = new ObjectMapper();
   final protected SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+  private final Conf conf;
 
   /**
    * Initialize data store.
@@ -32,9 +31,10 @@ public class RedisStore implements DataStore, AutoCloseable {
    * @param connectionHostName
    * @param appName
    */
-  public RedisStore(String connectionHostName, String appName) {
-    jedis = new Jedis(connectionHostName);
-    this.appName = appName;
+  public RedisStore(Conf conf) {
+    jedis = new Jedis(conf.getValue("data.redis.url"));
+    this.appName = conf.getValue("app.name");
+    this.conf = conf;
   }
 
 //  @Override
@@ -86,6 +86,21 @@ public class RedisStore implements DataStore, AutoCloseable {
     return jedis.hget(key, msg.getUuid());
   }
 
+  public Collection<Message> getLastNMessages(int n) throws IOException, ParseException {
+    ArrayList<Message> msgs = new ArrayList();
+    Set<String> zrange = jedis.zrange(getZKey(), 0, n);
+    for (String dateAndID : zrange) {
+      String[] split = dateAndID.split(":");
+      String key = getHashKey(appName, split[1], new Date(Long.parseLong(split[0])));
+      String jsonMsg = jedis.hget(key, split[1]);
+      if (jsonMsg != null) {
+        HashMap<String, Object> hMsg = mapper.readValue(jsonMsg, HashMap.class);
+        msgs.add(new Message(hMsg, conf));
+      }
+    }
+    return msgs;
+  }
+
   /**
    * Check to see if a message exists in the data store.
    *
@@ -102,8 +117,7 @@ public class RedisStore implements DataStore, AutoCloseable {
     final boolean zexists = jedis.zscore(zkey, zvalue) != null;
     if (hexists || zexists) {
       return true;
-    }
-    else {
+    } else {
       return false;
     }
   }
@@ -123,8 +137,7 @@ public class RedisStore implements DataStore, AutoCloseable {
     final boolean zexists = jedis.zscore(zkey, zvalue) != null;
     if (hexists || zexists) {
       return true;
-    }
-    else {
+    } else {
       return false;
     }
   }
@@ -205,7 +218,7 @@ public class RedisStore implements DataStore, AutoCloseable {
   public void deleteAll() {
     jedis.flushDB();
   }
-  
+
   protected long zSize() {
     return jedis.zcard(getZKey());
   }

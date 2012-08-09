@@ -7,12 +7,9 @@ import com.vreco.boomerang.message.ResponseMessage;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Set;
 import org.junit.*;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -27,7 +24,7 @@ public class RedisStoreTest {
 
   public RedisStoreTest() throws IOException {
     conf = new MockConf().conf;
-    store = new RedisStore("localhost", conf.getValue("app.name"));
+    store = new RedisStore(conf);
   }
 
   @BeforeClass
@@ -40,7 +37,7 @@ public class RedisStoreTest {
 
   @Before
   public void setUp() {
-    store = new RedisStore("localhost", conf.getValue("app.name"));
+    store = new RedisStore(conf);
     store.deleteAll();
   }
 
@@ -87,33 +84,14 @@ public class RedisStoreTest {
   }
 
   /**
-   * Test of batchSet method, of class RedisStore.
-   */
-  @Test
-  public void testBatchSet() {
-    System.out.println("batchSet");
-    Collection<Message> msgs = null;
-    RedisStore instance = null;
-    instance.batchSet(msgs);
-    // TODO review the generated test code and remove the default call to fail.
-    fail("The test case is a prototype.");
-  }
-
-
-  /**
    * Test of getZValue method, of class RedisStore.
    */
   @Test
   public void testGetZValue() {
-    System.out.println("getZValue");
-    Date date = null;
-    String uuid = "";
-    RedisStore instance = null;
-    String expResult = "";
-    String result = instance.getZValue(date, uuid);
-    assertEquals(expResult, result);
-    // TODO review the generated test code and remove the default call to fail.
-    fail("The test case is a prototype.");
+    Date date = new Date(Long.parseLong("1344486400340"));
+    String zValue = store.getZValue(date, "test");
+    System.out.println(zValue);
+    Assert.assertEquals("1344486400340:test", zValue);
   }
 
 }

@@ -55,7 +55,7 @@ public class ResponseConsumerTest {
     Main.startThreads(threads);
     try (Producer producer = new Producer(conf.getValue("mq.connection.url"));
             Consumer consumer = new Consumer(conf.getValue("mq.connection.url"))) {
-      store = new RedisStore(conf.getValue("data.redis.url"), conf.getValue("app.name"));
+      store = new RedisStore(conf);
       String json = "{\"boomQueues\":\"" + forwardQueue + "\", \"private\":{\"woo\":\"woo\"}, \"something\":\"something\"}";
       producer.connect("queue", conf.getValue("mq.processing.queue"));
       producer.setPersistence(false);
