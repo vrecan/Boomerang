@@ -7,10 +7,11 @@ import com.vreco.boomerang.message.ResponseMessage;
 import com.vreco.util.mq.Consumer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -18,8 +19,9 @@ import org.codehaus.jackson.map.ObjectMapper;
  */
 public class ResponseConsumer implements Runnable {
 
-  SimpleShutdown shutdown = SimpleShutdown.getInstance();
-  ObjectMapper mapper = new ObjectMapper();
+  final SimpleShutdown shutdown = SimpleShutdown.getInstance();
+  final Logger logger = LoggerFactory.getLogger(ResponseConsumer.class);
+  final ObjectMapper mapper = new ObjectMapper();
   DataStore store;
   final Conf conf;
 
@@ -39,33 +41,33 @@ public class ResponseConsumer implements Runnable {
           try {
             processResponse(mapper.readValue(mqMsg.getText(), ResponseMessage.class));
             mqMsg.acknowledge();
-            System.out.println("finished processing response.");
+            logger.debug("finished processing response.");
           } catch (JMSException | IOException e) {
-            System.out.print(e.getCause());
+            logger.error("Caught exceptiong while processing response: ", e);
           }
         } else {
-          System.out.println("No messages on response queue...");
+          logger.debug("No messages on response queue...");
         }
       }
     } catch (JMSException e) {
-      System.out.print(e.getCause());
+      logger.error("Caught MQ exception", e);
     }
 
   }
 
   protected void processResponse(ResponseMessage msg) {
     try {
-      System.out.println("processing response...");
-      System.out.println("ResponseMsg: " + mapper.writeValueAsString(msg));
+      logger.debug("processing response...");
+      logger.debug("ResponseMsg: {}", mapper.writeValueAsString(msg));
       if (msg.isSuccess() && msg.getDate() != null) {
         String result = store.get(msg);
-        System.out.println("deleting: " + result);
+        logger.debug("deleting: {}", result);
         store.delete(msg);
       } else if (msg.isResetTimer()) {
         //delete and re add with new date
       }
     } catch (Exception e) {
-      System.out.println(e.getCause());
+      logger.error("Error processing response: ", e);
     }
   }
 }

@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.Date;
 import javax.jms.JMSException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -20,6 +22,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 public class ResendExpired implements Runnable {
 
   final SimpleShutdown shutdown = SimpleShutdown.getInstance();
+  Logger logger = LoggerFactory.getLogger(ResendExpired.class);
   RedisStore store;
   final ObjectMapper mapper = new ObjectMapper();
   final Conf conf;
@@ -40,20 +43,14 @@ public class ResendExpired implements Runnable {
           resend(oldMessages);
         } else {
           try {
-            System.out.println("No messages to resend...");
+            logger.debug("No messages to resend...");
             Thread.sleep(1000);
           } catch (Exception e) {
-            //ignore
+            logger.error("Caught exception while sleeping:", e);
           }
         }
       } catch (JMSException | IOException | ParseException e) {
-        try {
-          System.out.println("Unable to resend message");
-          System.out.print(e.getCause());
-          Thread.sleep(100);
-        } catch (InterruptedException ex) {
-          //ignore
-        }
+        logger.error("Failed to resend message", e);
       }
     }
   }
@@ -63,12 +60,12 @@ public class ResendExpired implements Runnable {
     ArrayList<Message> remove = new ArrayList(10);
     Date now = new Date();
     Date dateThreshold = new Date(now.getTime() - 60 * 1000);
-    
-    for(Message msg: msgs) {
+
+    for (Message msg : msgs) {
       Date msgDate = msg.getDate();
       boolean youngerThenThreshold = dateThreshold.before(msgDate);
-      if(youngerThenThreshold) {
-        remove.add(msg); 
+      if (youngerThenThreshold) {
+        remove.add(msg);
       }
     }
     msgs.removeAll(remove);
