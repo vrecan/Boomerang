@@ -101,7 +101,7 @@ public class ResendExpired implements Runnable {
       //TODO: build atomic operation to reset the date without the posibility of losing data
       store.delete(msg);
       msg.setDate(new Date());
-      msg.setRetryCount(msg.getRetryCount() + 1);
+      msg.incrementRetry();
       store.set(msg);
     }
   }

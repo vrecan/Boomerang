@@ -170,13 +170,9 @@ public class Message {
   public int getRetryCount() {
     return RetryCount;
   }
-
-  /**
-   * @param RetryCount the RetryCount to set
-   */
-  public void setRetryCount(int RetryCount) {
-    this.RetryCount = RetryCount;
-    msg.put(conf.getValue("boomerang.retry.label"), msgDateFormat.format(date));
+  
+  public void incrementRetry() {
+    this.RetryCount ++;
   }
 
 }
