@@ -20,7 +20,7 @@ public class Message {
   private ArrayList<String> queues = new ArrayList();
   final protected SimpleDateFormat msgDateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
   private final Conf conf;
-  private int RetryCount = 0;
+  private Integer RetryCount = 0;
 
   public Message(HashMap<String, Object> msg, final Conf conf) {
     this.msg = msg;
@@ -33,6 +33,7 @@ public class Message {
     }
     setInternalDate();
     setInternalUuid();
+    setInternalRetryCount();
   }
 
   /**
@@ -81,6 +82,24 @@ public class Message {
     }
     msg.put(conf.getValue("boomerang.uuid.label"), uuid);
   }
+  
+
+  private Integer getInternalRetryCount() {
+    try {
+      String retry = (String) msg.get(conf.getValue("boomerang.retry.label"));
+      return Integer.parseInt(retry);
+    } catch (Exception e) {
+      return null;
+    }    
+    
+  }
+  private void setInternalRetryCount() {
+    RetryCount = getInternalRetryCount();
+    if (RetryCount == null) {
+      this.RetryCount = 0;
+    }
+    msg.put(conf.getValue("boomerang.retry.label"), RetryCount);
+  }  
 
   /**
    * @return the msg
@@ -159,4 +178,5 @@ public class Message {
     this.RetryCount = RetryCount;
     msg.put(conf.getValue("boomerang.retry.label"), msgDateFormat.format(date));
   }
+
 }
