@@ -24,8 +24,6 @@ public class Message {
 
   public Message(HashMap<String, Object> msg, final Conf conf) {
     this.msg = msg;
-    this.uuid = UUID.randomUUID().toString();
-    this.date = new Date();
     this.conf = conf;
 
     String sQueues = (String) msg.get(conf.getValue("boomerang.producer.label"));

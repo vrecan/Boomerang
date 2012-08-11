@@ -16,8 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Loop through oldest messages and resend them back on the queues that have
- * not acknowledged being processed.
+ * Loop through oldest messages and resend them back on the queues that have not acknowledged being processed.
+ *
  * @author Ben Aldrich
  */
 public class ResendExpired implements Runnable {
@@ -60,11 +60,11 @@ public class ResendExpired implements Runnable {
   }
 
   /**
-   * Get the oldest messages out of the data store and compare them 
-   * against our time resend timer.
+   * Get the oldest messages out of the data store and compare them against our time resend timer.
+   *
    * @return
    * @throws IOException
-   * @throws ParseException 
+   * @throws ParseException
    */
   protected Collection<Message> getOldMessages() throws IOException, ParseException {
     Collection<Message> msgs = store.getLastNMessages(10);
@@ -85,10 +85,11 @@ public class ResendExpired implements Runnable {
 
   /**
    * Resend the message.
+   *
    * @param msgs
    * @throws JMSException
    * @throws IOException
-   * @throws ParseException 
+   * @throws ParseException
    */
   protected void resend(Collection<Message> msgs) throws JMSException, IOException, ParseException {
     for (Message msg : msgs) {
@@ -96,7 +97,7 @@ public class ResendExpired implements Runnable {
       msg.getQueues();
       producer.connect("queue", msg.getDestination());
       producer.sendMessage(mapper.writeValueAsString(msg.getMsg()));
-      
+
       //TODO: build atomic operation to reset the date without the posibility of losing data
       store.delete(msg);
       msg.setDate(new Date());
