@@ -1,11 +1,8 @@
 package com.vreco.boomerang.message;
 
 import com.vreco.boomerang.conf.Conf;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * This is the POJO mapping for a message object.
