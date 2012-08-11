@@ -66,7 +66,7 @@ public class ResendExpired implements Runnable {
     
     for(Message msg: msgs) {
       Date msgDate = msg.getDate();
-      boolean youngerThenThreshold = dateThreshold.after(msgDate);
+      boolean youngerThenThreshold = dateThreshold.before(msgDate);
       if(youngerThenThreshold) {
         remove.add(msg); 
       }
@@ -81,10 +81,10 @@ public class ResendExpired implements Runnable {
       msg.getQueues();
       producer.connect("queue", msg.getDestination());
       producer.sendMessage(mapper.writeValueAsString(msg.getMsg()));
+      store.delete(msg);
       msg.setDate(new Date());
       msg.setRetryCount(msg.getRetryCount() + 1);
       store.set(msg);
-      store.delete(msg);
     }
   }
 }
