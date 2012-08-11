@@ -3,13 +3,11 @@ package com.vreco.boomerang;
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.response.ResponseConsumer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.jms.JMSException;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -17,7 +15,7 @@ import org.apache.log4j.PropertyConfigurator;
  */
 public final class Main {
 
-  private Logger logger;
+  Logger logger = LoggerFactory.getLogger(Main.class);
 
   public Main() {
   }
@@ -25,12 +23,10 @@ public final class Main {
   protected void start() throws JMSException {
     SimpleShutdown shutdown = SimpleShutdown.getInstance();
 
-    Conf conf = null;
     HashMap<Thread, Long> threads = new HashMap();
     try {
       Runtime.getRuntime().addShutdownHook(shutdown);
-      conf = new Conf("conf/boomerang.conf");
-      logger = getLog4J(conf);
+      Conf conf = new Conf("conf/boomerang.conf");
 
       logger.info("starting Threads.");
       threads = getThreads(conf);
@@ -40,10 +36,10 @@ public final class Main {
       System.out.print(e);
       System.out.println("Caught unexpected exception, exiting");
       if (logger != null) {
-        logger.fatal("Caught unexpected exception, exiting.", e);
+        logger.error("Caught unexpected exception, exiting.", e);
       } else {
         System.out.println("Caught unexpected exception, exiting.");
-        System.out.print(e.getStackTrace().toString());
+        System.out.print(e.getCause());
       }
     }
     while (!shutdown.isShutdown()) {
@@ -101,20 +97,6 @@ public final class Main {
     for (Map.Entry<Thread, Long> map : threads.entrySet()) {
       map.getKey().join(map.getValue());
     }
-  }
-
-  /**
-   * Load log4j config.
-   *
-   * @throws ComplianceException
-   */
-  protected Logger getLog4J(final Conf conf) throws IOException {
-    File log4jFile = new File(conf.getValue("log4j.conf", "conf/log4j.conf"));
-    if (!log4jFile.exists()) {
-      throw new IOException("No log4j conf file found: " + log4jFile.toString());
-    }
-    PropertyConfigurator.configureAndWatch(log4jFile.getAbsolutePath());
-    return logger = Logger.getLogger(Main.class);
   }
 
   public static void main(final String args[]) throws JMSException {
