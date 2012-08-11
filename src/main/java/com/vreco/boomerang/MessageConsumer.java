@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 public class MessageConsumer implements Runnable {
 
   final SimpleShutdown shutdown = SimpleShutdown.getInstance();
-  Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
+  final Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
   final ObjectMapper mapper = new ObjectMapper();
   final Conf conf;
   DataStore store;
