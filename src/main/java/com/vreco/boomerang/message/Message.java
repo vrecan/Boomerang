@@ -171,8 +171,12 @@ public class Message {
     return RetryCount;
   }
   
+  /**
+   * Increment the retry counter.
+   */
   public void incrementRetry() {
     this.RetryCount ++;
+    msg.put(conf.getValue("boomerang.retry.label"), RetryCount);
   }
 
 }
