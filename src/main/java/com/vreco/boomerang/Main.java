@@ -33,15 +33,10 @@ public final class Main {
       startThreads(threads);
     } catch (Throwable e) {
       shutdown.setShutdown(true);
-      System.out.print(e);
-      System.out.println("Caught unexpected exception, exiting");
-      if (logger != null) {
-        logger.error("Caught unexpected exception, exiting.", e);
-      } else {
-        System.out.println("Caught unexpected exception, exiting.");
-        System.out.print(e.getCause());
-      }
+      logger.error("Caught unexpected exception, exiting.", e);
+
     }
+
     while (!shutdown.isShutdown()) {
       try {
         Thread.sleep(200);
