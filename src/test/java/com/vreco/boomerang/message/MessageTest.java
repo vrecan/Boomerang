@@ -66,7 +66,7 @@ public class MessageTest extends TestCase {
    */
   public void testMessageWithExistingUUID() throws Exception {
 
-    String exp= "abc-2352627-6%^";
+    String exp= "abc-2352627-6";
 
     ObjectMapper mapper = new ObjectMapper();
     String json = "{\"test\":\"proc\",\"something\":\"uuid\", \"" + conf.getValue("boomerang.producer.label")

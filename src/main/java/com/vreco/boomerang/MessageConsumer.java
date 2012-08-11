@@ -1,8 +1,8 @@
 package com.vreco.boomerang;
 
-import com.vreco.boomerang.datastore.RedisStore;
-import com.vreco.boomerang.datastore.DataStore;
 import com.vreco.boomerang.conf.Conf;
+import com.vreco.boomerang.datastore.DataStore;
+import com.vreco.boomerang.datastore.RedisStore;
 import com.vreco.boomerang.message.Message;
 import com.vreco.util.mq.Consumer;
 import com.vreco.util.mq.Producer;
@@ -14,6 +14,8 @@ import javax.jms.TextMessage;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -22,6 +24,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 public class MessageConsumer implements Runnable {
 
   final SimpleShutdown shutdown = SimpleShutdown.getInstance();
+  Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
   final ObjectMapper mapper = new ObjectMapper();
   final Conf conf;
   DataStore store;
@@ -50,11 +53,11 @@ public class MessageConsumer implements Runnable {
             System.out.print(e.getCause().toString());
           }
         } else {
-          System.out.println("No messages on queue...");
+          logger.debug("No messages on queue...");
         }
       }
     } catch (JMSException e) {
-      System.out.print(e.getCause().toString());
+      logger.error("Failed to process message", e);
     }
 
   }

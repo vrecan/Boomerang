@@ -8,6 +8,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Response;
 import redis.clients.jedis.Transaction;
@@ -21,6 +23,7 @@ public class RedisStore implements DataStore, AutoCloseable {
 
   final Jedis jedis;
   final String appName;
+  final Logger logger = LoggerFactory.getLogger(RedisStore.class);
   final ObjectMapper mapper = new ObjectMapper();
   final protected SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
   private final Conf conf;
@@ -158,14 +161,14 @@ public class RedisStore implements DataStore, AutoCloseable {
       final String zKey = getZKey();
 
       Transaction t = jedis.multi();
-      System.out.println("setting: " + key);
-      System.out.println("zkey: " + zKey);
-      System.out.println("zValue: " + zValue);
+      logger.debug("setting: {}", key);
+      logger.debug("zkey: {}", zKey);
+      logger.debug("zValue: {}", zValue);
       responses.add(t.hset(key, msg.getUuid(), mapper.writeValueAsString(msg.getMsg())));
       responses.add(t.zadd(zKey.getBytes("UTF8"), 0, zValue.getBytes("UTF8")));
       t.exec();
       for (Response<Long> r : responses) {
-        System.out.println("response:" + r.get());
+        logger.debug("set & zadd responses: {}", r.get());
       }
     } catch (RuntimeException e) {
       throw new IOException("Failed to set message in store.", e);
