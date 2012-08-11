@@ -1,8 +1,11 @@
 package com.vreco.boomerang.message;
 
 import com.vreco.boomerang.conf.Conf;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This is the POJO mapping for a message object.
@@ -12,21 +15,72 @@ import java.util.*;
 public class Message {
 
   private final HashMap<String, Object> msg;
-  private final String uuid;
-  private final Date date;
+  private String uuid;
+  private Date date;
   private ArrayList<String> queues = new ArrayList();
-  private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+  final protected SimpleDateFormat msgDateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+  private final Conf conf;
+  private int RetryCount = 0;
 
   public Message(HashMap<String, Object> msg, final Conf conf) {
     this.msg = msg;
     this.uuid = UUID.randomUUID().toString();
     this.date = new Date();
+    this.conf = conf;
 
     String sQueues = (String) msg.get(conf.getValue("boomerang.producer.label"));
-    String[] split = sQueues.split(",");
-    queues.addAll(Arrays.asList(split));
+    if (sQueues != null) {
+      String[] split = sQueues.split(",");
+      queues.addAll(Arrays.asList(split));
+    }
+    setInternalDate();
+    setInternalUuid();
+  }
 
-    msg.put(conf.getValue("boomerang.date.label"), sdf.format(date));
+  /**
+   * Get the date from the internal message.
+   * @return 
+   */
+  private Date getInternalDate() {
+    try {
+      String msgDate = (String) msg.get(conf.getValue("boomerang.date.label"));
+      return msgDateFormat.parse(msgDate);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /**
+   * Set the date in both objects.
+   */
+  private void setInternalDate() {
+    date = getInternalDate();
+    if (date == null) {
+      this.date = new Date();
+    }
+    msg.put(conf.getValue("boomerang.date.label"), msgDateFormat.format(date));
+  }
+
+  /**
+   * Get the uuid from the internal message.
+   * @return 
+   */
+  private String getInternalUuid() {
+    try {
+      return (String) msg.get(conf.getValue("boomerang.uuid.label"));
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /**
+   * Set the uuid in both objects.
+   */
+  private void setInternalUuid() {
+    uuid = getInternalUuid();
+    if (uuid == null) {
+      this.uuid = UUID.randomUUID().toString();
+    }
     msg.put(conf.getValue("boomerang.uuid.label"), uuid);
   }
 
@@ -49,6 +103,16 @@ public class Message {
    */
   public Date getDate() {
     return date;
+  }
+
+  /**
+   * Set the date.
+   *
+   * @param Date
+   */
+  public void setDate(Date date) {
+    this.date = date;
+    msg.put(conf.getValue("boomerang.date.label"), msgDateFormat.format(date));
   }
 
   /**
@@ -81,5 +145,20 @@ public class Message {
    */
   public void setQueues(final ArrayList<String> queues) {
     this.queues = queues;
+  }
+
+  /**
+   * @return the RetryCount
+   */
+  public int getRetryCount() {
+    return RetryCount;
+  }
+
+  /**
+   * @param RetryCount the RetryCount to set
+   */
+  public void setRetryCount(int RetryCount) {
+    this.RetryCount = RetryCount;
+    msg.put(conf.getValue("boomerang.retry.label"), msgDateFormat.format(date));
   }
 }
