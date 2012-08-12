@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import javax.jms.JMSException;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +24,6 @@ public class ResendExpired implements Runnable {
   final SimpleShutdown shutdown = SimpleShutdown.getInstance();
   final Logger logger = LoggerFactory.getLogger(ResendExpired.class);
   RedisStore store;
-  final ObjectMapper mapper = new ObjectMapper();
   final Conf conf;
   Producer producer;
   final long defaultResend;
@@ -97,11 +95,9 @@ public class ResendExpired implements Runnable {
    */
   protected void resend(Collection<Message> msgs) throws JMSException, IOException, ParseException {
     for (Message msg : msgs) {
-      msg.getMsg();
-      msg.getQueues();
       producer.connect("queue", msg.getDestination());
       producer.setTTL(defaultSendTTL);
-      producer.sendMessage(mapper.writeValueAsString(msg.getMsg()));
+      producer.sendMessage(msg.getJsonStringMessage());
 
       //TODO: build atomic operation to reset the date without the posibility of losing data
       store.delete(msg);
