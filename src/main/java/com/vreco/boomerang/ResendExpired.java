@@ -16,22 +16,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Loop through oldest messages and resend them back on the queues that have not acknowledged being processed.
  *
  * @author Ben Aldrich
  */
 public class ResendExpired implements Runnable {
 
   final SimpleShutdown shutdown = SimpleShutdown.getInstance();
-  Logger logger = LoggerFactory.getLogger(ResendExpired.class);
+  final Logger logger = LoggerFactory.getLogger(ResendExpired.class);
   RedisStore store;
   final ObjectMapper mapper = new ObjectMapper();
   final Conf conf;
   Producer producer;
+  final long defaultResend;
+  final long defaultSendTTL;
 
   public ResendExpired(Conf conf) {
     this.conf = conf;
+    this.defaultResend = conf.getLongValue("boomerang.resend.default", Long.parseLong("60000"));
+    this.defaultSendTTL = conf.getLongValue("boomerang.producer.ttl.default", Long.parseLong("60000"));
   }
 
+  /**
+   * Main loop.
+   */
   @Override
   public void run() {
     producer = new Producer(conf.getValue("mq.connection.url"));
@@ -55,11 +63,18 @@ public class ResendExpired implements Runnable {
     }
   }
 
+  /**
+   * Get the oldest messages out of the data store and compare them against our time resend timer.
+   *
+   * @return
+   * @throws IOException
+   * @throws ParseException
+   */
   protected Collection<Message> getOldMessages() throws IOException, ParseException {
     Collection<Message> msgs = store.getLastNMessages(10);
     ArrayList<Message> remove = new ArrayList(10);
     Date now = new Date();
-    Date dateThreshold = new Date(now.getTime() - 60 * 1000);
+    Date dateThreshold = new Date(now.getTime() - defaultResend);
 
     for (Message msg : msgs) {
       Date msgDate = msg.getDate();
@@ -72,15 +87,26 @@ public class ResendExpired implements Runnable {
     return msgs;
   }
 
+  /**
+   * Resend the message.
+   *
+   * @param msgs
+   * @throws JMSException
+   * @throws IOException
+   * @throws ParseException
+   */
   protected void resend(Collection<Message> msgs) throws JMSException, IOException, ParseException {
     for (Message msg : msgs) {
       msg.getMsg();
       msg.getQueues();
       producer.connect("queue", msg.getDestination());
+      producer.setTTL(defaultSendTTL);
       producer.sendMessage(mapper.writeValueAsString(msg.getMsg()));
+
+      //TODO: build atomic operation to reset the date without the posibility of losing data
       store.delete(msg);
       msg.setDate(new Date());
-      msg.setRetryCount(msg.getRetryCount() + 1);
+      msg.incrementRetry();
       store.set(msg);
     }
   }

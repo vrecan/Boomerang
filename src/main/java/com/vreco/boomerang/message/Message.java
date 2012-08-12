@@ -1,11 +1,8 @@
 package com.vreco.boomerang.message;
 
 import com.vreco.boomerang.conf.Conf;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * This is the POJO mapping for a message object.
@@ -20,12 +17,10 @@ public class Message {
   private ArrayList<String> queues = new ArrayList();
   final protected SimpleDateFormat msgDateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
   private final Conf conf;
-  private int RetryCount = 0;
+  private Integer RetryCount = 0;
 
   public Message(HashMap<String, Object> msg, final Conf conf) {
     this.msg = msg;
-    this.uuid = UUID.randomUUID().toString();
-    this.date = new Date();
     this.conf = conf;
 
     String sQueues = (String) msg.get(conf.getValue("boomerang.producer.label"));
@@ -35,6 +30,7 @@ public class Message {
     }
     setInternalDate();
     setInternalUuid();
+    setInternalRetryCount();
   }
 
   /**
@@ -83,6 +79,24 @@ public class Message {
     }
     msg.put(conf.getValue("boomerang.uuid.label"), uuid);
   }
+  
+
+  private Integer getInternalRetryCount() {
+    try {
+      String retry = (String) msg.get(conf.getValue("boomerang.retry.label"));
+      return Integer.parseInt(retry);
+    } catch (Exception e) {
+      return null;
+    }    
+    
+  }
+  private void setInternalRetryCount() {
+    RetryCount = getInternalRetryCount();
+    if (RetryCount == null) {
+      this.RetryCount = 0;
+    }
+    msg.put(conf.getValue("boomerang.retry.label"), RetryCount);
+  }  
 
   /**
    * @return the msg
@@ -153,12 +167,15 @@ public class Message {
   public int getRetryCount() {
     return RetryCount;
   }
-
+  
   /**
-   * @param RetryCount the RetryCount to set
+   * Increment the retry counter.
    */
-  public void setRetryCount(int RetryCount) {
-    this.RetryCount = RetryCount;
-    msg.put(conf.getValue("boomerang.retry.label"), msgDateFormat.format(date));
+  public void incrementRetry() {
+    this.RetryCount ++;
+    msg.put(conf.getValue("boomerang.retry.label"), RetryCount);
   }
+  
+  
+
 }
