@@ -28,9 +28,11 @@ public class MessageConsumer implements Runnable {
   final ObjectMapper mapper = new ObjectMapper();
   final Conf conf;
   DataStore store;
+  final long defaultSendTTL;
 
   public MessageConsumer(Conf conf) {
     this.conf = conf;
+    this.defaultSendTTL = conf.getLongValue("boomerang.producer.ttl.default", Long.parseLong("60000"));
   }
 
   @Override
@@ -47,6 +49,7 @@ public class MessageConsumer implements Runnable {
             Message msg = getMessage(mqMsg.getText());
             store.set(msg);
             producer.connect("queue", msg.getDestination());
+            producer.setTTL(defaultSendTTL);
             producer.sendMessage(mapper.writeValueAsString(msg.getMsg()));
             mqMsg.acknowledge();
           } catch (JMSException | IOException e) {

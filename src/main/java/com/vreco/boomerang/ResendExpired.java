@@ -28,9 +28,13 @@ public class ResendExpired implements Runnable {
   final ObjectMapper mapper = new ObjectMapper();
   final Conf conf;
   Producer producer;
+  final long defaultResend;
+  final long defaultSendTTL;
 
   public ResendExpired(Conf conf) {
     this.conf = conf;
+    this.defaultResend = conf.getLongValue("boomerang.resend.default", Long.parseLong("60000"));
+    this.defaultSendTTL = conf.getLongValue("boomerang.producer.ttl.default", Long.parseLong("60000"));
   }
 
   /**
@@ -70,7 +74,7 @@ public class ResendExpired implements Runnable {
     Collection<Message> msgs = store.getLastNMessages(10);
     ArrayList<Message> remove = new ArrayList(10);
     Date now = new Date();
-    Date dateThreshold = new Date(now.getTime() - 60 * 1000);
+    Date dateThreshold = new Date(now.getTime() - defaultResend);
 
     for (Message msg : msgs) {
       Date msgDate = msg.getDate();
@@ -96,6 +100,7 @@ public class ResendExpired implements Runnable {
       msg.getMsg();
       msg.getQueues();
       producer.connect("queue", msg.getDestination());
+      producer.setTTL(defaultSendTTL);
       producer.sendMessage(mapper.writeValueAsString(msg.getMsg()));
 
       //TODO: build atomic operation to reset the date without the posibility of losing data
