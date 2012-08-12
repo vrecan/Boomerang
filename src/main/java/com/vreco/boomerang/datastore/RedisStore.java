@@ -2,12 +2,13 @@ package com.vreco.boomerang.datastore;
 
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.message.Message;
-import com.vreco.boomerang.message.ResponseMessage;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import org.codehaus.jackson.map.ObjectMapper;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -24,7 +25,6 @@ public class RedisStore implements DataStore, AutoCloseable {
   final Jedis jedis;
   final String appName;
   final Logger logger = LoggerFactory.getLogger(RedisStore.class);
-  final ObjectMapper mapper = new ObjectMapper();
   final protected SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
   private final Conf conf;
 
@@ -71,25 +71,12 @@ public class RedisStore implements DataStore, AutoCloseable {
    * @throws ParseException
    */
   @Override
-  public String get(final ResponseMessage msg) throws ParseException {
-    final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
-    return jedis.hget(key, msg.getUuid());
-  }
-
-  /**
-   * Get our stored message from redis.
-   *
-   * @param msg
-   * @return
-   * @throws ParseException
-   */
-  @Override
   public String get(final Message msg) throws ParseException {
     final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
     return jedis.hget(key, msg.getUuid());
   }
 
-  public Collection<Message> getLastNMessages(int n) throws IOException, ParseException {
+  public Collection<Message> getLastNMessages(final int n) throws IOException, ParseException {
     ArrayList<Message> msgs = new ArrayList();
     Set<String> zrange = jedis.zrange(getZKey(), 0, n);
     for (String dateAndID : zrange) {
@@ -97,8 +84,7 @@ public class RedisStore implements DataStore, AutoCloseable {
       String key = getHashKey(appName, split[1], new Date(Long.parseLong(split[0])));
       String jsonMsg = jedis.hget(key, split[1]);
       if (jsonMsg != null) {
-        HashMap<String, Object> hMsg = mapper.readValue(jsonMsg, HashMap.class);
-        msgs.add(new Message(hMsg, conf));
+        msgs.add(new Message(jsonMsg, conf));
       }
     }
     return msgs;
@@ -112,27 +98,7 @@ public class RedisStore implements DataStore, AutoCloseable {
    * @throws ParseException
    */
   @Override
-  public boolean exists(final ResponseMessage msg) throws ParseException {
-    final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
-    final String zkey = getZKey();
-    final String zvalue = getZValue(msg.getDate(), msg.getUuid());
-    final boolean hexists = jedis.hexists(key, msg.getUuid());
-    final boolean zexists = jedis.zscore(zkey, zvalue) != null;
-    if (hexists || zexists) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  /**
-   * Check to see if a message exists in the data store.
-   *
-   * @param msg
-   * @return
-   */
-  @Override
-  public boolean exists(final Message msg) {
+  public boolean exists(Message msg) throws ParseException {
     final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
     final String zkey = getZKey();
     final String zvalue = getZValue(msg.getDate(), msg.getUuid());
@@ -164,7 +130,7 @@ public class RedisStore implements DataStore, AutoCloseable {
       logger.debug("setting: {}", key);
       logger.debug("zkey: {}", zKey);
       logger.debug("zValue: {}", zValue);
-      responses.add(t.hset(key, msg.getUuid(), mapper.writeValueAsString(msg.getMsg())));
+      responses.add(t.hset(key, msg.getUuid(), msg.getJsonStringMessage()));
       responses.add(t.zadd(zKey.getBytes("UTF8"), 0, zValue.getBytes("UTF8")));
       t.exec();
       for (Response<Long> r : responses) {
@@ -183,21 +149,6 @@ public class RedisStore implements DataStore, AutoCloseable {
   @Override
   public void batchSet(Collection<Message> msgs) {
     throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  /**
-   * Delete our stored message.
-   *
-   * @param msg
-   * @throws ParseException
-   */
-  @Override
-  public void delete(ResponseMessage msg) throws ParseException {
-    final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
-    final String zkey = getZKey();
-    final String zvalue = getZValue(msg.getDate(), msg.getUuid());
-    jedis.zrem(zkey, zvalue);
-    jedis.hdel(key, msg.getUuid());
   }
 
   /**

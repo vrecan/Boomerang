@@ -5,7 +5,8 @@ import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.conf.MockConf;
 import com.vreco.boomerang.datastore.DataStore;
 import com.vreco.boomerang.datastore.RedisStore;
-import com.vreco.boomerang.message.ResponseMessage;
+import com.vreco.boomerang.message.Message;
+import com.vreco.boomerang.message.MockMessage;
 import com.vreco.util.mq.Consumer;
 import com.vreco.util.mq.Producer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
@@ -23,7 +24,6 @@ import org.junit.*;
  */
 public class ResponseConsumerTest {
 
-  ObjectMapper mapper = new ObjectMapper();
   final protected SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
   final SimpleShutdown shutdown = SimpleShutdown.getInstance();
   DataStore store;
@@ -52,32 +52,31 @@ public class ResponseConsumerTest {
   }
 
   @Test
-  public void testFullCycle() throws Exception {
+  public void ITTestAcknowledgeMessage() throws Exception {
     String forwardQueue = "fullcycleQ";
     HashMap<Thread, Long> threads = Main.getThreads(conf);
     Main.startThreads(threads);
     try (Producer producer = new Producer(conf.getValue("mq.connection.url"));
             Consumer consumer = new Consumer(conf.getValue("mq.connection.url"))) {
-      String json = "{\"boomQueues\":\"" + forwardQueue + "\", \"private\":{\"woo\":\"woo\"}, \"something\":\"something\"}";
+      Message msg = MockMessage.getBasicMessage(conf, forwardQueue);
+
       producer.connect("queue", conf.getValue("mq.processing.queue"));
       producer.setPersistence(false);
-      producer.sendMessage(json);
+      producer.sendMessage(msg.getJsonStringMessage());
+
+      consumer.setTimeout(2000);
       consumer.connect("queue", forwardQueue);
       TextMessage mqMsg = consumer.getTextMessage();
       if (mqMsg == null) {
         throw new IOException("Failed to get a message from " + forwardQueue + " queue");
       }
       System.out.println(mqMsg.getText());
-      HashMap<String, Object> forwardedMessage = mapper.readValue(mqMsg.getText(), HashMap.class);
-      producer.connect("queue", conf.getValue("mq.response.queue"));
-      ResponseMessage rMsg = new ResponseMessage();
-      rMsg.setDate(dateFormat.parse((String) forwardedMessage.get(conf.getValue("boomerang.date.label"))));
-      rMsg.setUuid((String) forwardedMessage.get(conf.getValue("boomerang.uuid.label")));
-      rMsg.setQueue((String) forwardedMessage.get(conf.getValue("boomerang.producer.label")));
+      Message rMsg = new Message(mqMsg.getText(), conf);
       rMsg.setSuccess(true);
       //Did the message make it in the db store?
       Assert.assertTrue(store.exists(rMsg));
-      producer.sendMessage(mapper.writeValueAsString(rMsg));
+      producer.connect("queue", conf.getValue("mq.response.queue"));
+      producer.sendMessage(rMsg.getJsonStringMessage());
       mqMsg.acknowledge();
       if (!waitForMessageDeleteInStore(rMsg)) {
         Assert.fail("Message not removed from data store");
@@ -93,7 +92,7 @@ public class ResponseConsumerTest {
    * @return
    * @throws InterruptedException
    */
-  public boolean waitForMessageDeleteInStore(ResponseMessage msg) throws InterruptedException, ParseException {
+  public boolean waitForMessageDeleteInStore(Message msg) throws InterruptedException, ParseException {
     int count = 0;
     while (store.exists(msg)) {
       if (count >= 50) {

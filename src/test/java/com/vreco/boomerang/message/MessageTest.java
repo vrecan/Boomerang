@@ -3,11 +3,10 @@ package com.vreco.boomerang.message;
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.conf.MockConf;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  *
@@ -16,9 +15,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 public class MessageTest extends TestCase {
 
   Conf conf;
+  protected final SimpleDateFormat msgDateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 
   public MessageTest(String testName) {
     super(testName);
+
   }
 
   @Override
@@ -33,11 +34,10 @@ public class MessageTest extends TestCase {
   }
 
   public void testCreateExpectedMsg() throws IOException {
-    ObjectMapper mapper = new ObjectMapper();
+
     String json = "{\"test\":\"proc\",\"something\":\"uuid\", \"" + conf.getValue("boomerang.producer.label")
             + "\":\"test\"}";
-    HashMap<String, Object> hMsg = mapper.readValue(json, HashMap.class);
-    Message msg = new Message(hMsg, conf);
+    Message msg = new Message(json, conf);
     Assert.assertEquals("test", msg.getDestination());
     Assert.assertNotNull(msg.getUuid());
   }
@@ -49,11 +49,10 @@ public class MessageTest extends TestCase {
 
     String expDate = "2012081115584545";
 
-    ObjectMapper mapper = new ObjectMapper();
+
     String json = "{\"test\":\"proc\",\"something\":\"uuid\", \"" + conf.getValue("boomerang.producer.label")
             + "\":\"test\", \"" + conf.getValue("boomerang.date.label") + "\":\"" + expDate + "\"}";
-    HashMap<String, Object> hMsg = mapper.readValue(json, HashMap.class);
-    Message msg = new Message(hMsg, conf);
+    Message msg = new Message(json, conf);
     Assert.assertEquals("test", msg.getDestination());
     Assert.assertNotNull(msg.getUuid());
     Date exp = msg.msgDateFormat.parse(expDate);
@@ -66,16 +65,30 @@ public class MessageTest extends TestCase {
    */
   public void testMessageWithExistingUUID() throws Exception {
 
-    String exp= "abc-2352627-6";
+    String exp = "abc-2352627-6";
 
-    ObjectMapper mapper = new ObjectMapper();
+
     String json = "{\"test\":\"proc\",\"something\":\"uuid\", \"" + conf.getValue("boomerang.producer.label")
             + "\":\"test\", \"" + conf.getValue("boomerang.uuid.label") + "\":\"" + exp + "\"}";
-    HashMap<String, Object> hMsg = mapper.readValue(json, HashMap.class);
-    Message msg = new Message(hMsg, conf);
+    Message msg = new Message(json, conf);
     Assert.assertEquals("test", msg.getDestination());
     Assert.assertNotNull(msg.getUuid());
     Assert.assertEquals(exp, msg.getUuid());
 
+  }
+
+  /**
+   * Test to see if date already exist in the message we should use it.
+   */
+  public void testMessageSuccessResponse() throws Exception {
+    Date Date = new Date();
+    Message basicResponseSuccess = MockMessage.getBasicResponseSuccess(conf, msgDateFormat.format(Date));
+    Assert.assertTrue(basicResponseSuccess.isSuccess());
+  }
+
+  public void testRawResponseSuccess() throws Exception {
+    String json = "{\"boomUuid\":\"0ca14d7a-8b90-42a1-a4ea-999bfcd52d5e\",\"boomQueues\":\"fullcycleQ\",\"boomSuccess\":true,\"boomDate\":\"20120812155553726\",\"boomRetry\":0}";
+    Message msg = new Message(json, conf);
+    Assert.assertTrue(msg.isSuccess());
   }
 }

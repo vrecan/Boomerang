@@ -3,13 +3,12 @@ package com.vreco.boomerang.response;
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.datastore.DataStore;
 import com.vreco.boomerang.datastore.RedisStore;
-import com.vreco.boomerang.message.ResponseMessage;
+import com.vreco.boomerang.message.Message;
 import com.vreco.util.mq.Consumer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.IOException;
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +20,6 @@ public class ResponseConsumer implements Runnable {
 
   final SimpleShutdown shutdown = SimpleShutdown.getInstance();
   final Logger logger = LoggerFactory.getLogger(ResponseConsumer.class);
-  final ObjectMapper mapper = new ObjectMapper();
   DataStore store;
   final Conf conf;
 
@@ -39,7 +37,7 @@ public class ResponseConsumer implements Runnable {
         TextMessage mqMsg = consumer.getTextMessage();
         if (mqMsg != null) {
           try {
-            processResponse(mapper.readValue(mqMsg.getText(), ResponseMessage.class));
+            processResponse(new Message(mqMsg.getText(), conf));
             mqMsg.acknowledge();
             logger.debug("finished processing response.");
           } catch (JMSException | IOException e) {
@@ -55,17 +53,18 @@ public class ResponseConsumer implements Runnable {
 
   }
 
-  protected void processResponse(ResponseMessage msg) {
+  protected void processResponse(Message msg) {
     try {
       logger.debug("processing response...");
-      logger.debug("ResponseMsg: {}", mapper.writeValueAsString(msg));
+      logger.debug("ResponseMsg: {}", msg.getJsonStringMessage());
+      logger.debug("Response Date: {}",msg.getDate());
+      logger.debug("Response Success: {}",msg.isSuccess());
       if (msg.isSuccess() && msg.getDate() != null) {
         String result = store.get(msg);
         logger.debug("deleting: {}", result);
         store.delete(msg);
-      } else if (msg.isResetTimer()) {
-        //delete and re add with new date
       }
+      //TODO: Deal with other cases other then succes msg.
     } catch (Exception e) {
       logger.error("Error processing response: ", e);
     }

@@ -1,7 +1,6 @@
 package com.vreco.boomerang.datastore;
 
 import com.vreco.boomerang.message.Message;
-import com.vreco.boomerang.message.ResponseMessage;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;
@@ -18,16 +17,13 @@ public interface DataStore extends AutoCloseable {
 
   public void batchSet(Collection<Message> msgs);
 
-  public String get(ResponseMessage msg) throws ParseException;
   public String get(Message msg) throws ParseException;
 
-  public void delete(ResponseMessage msg) throws ParseException;
   public void delete(Message msg) throws ParseException;
+
   public Set<String> getKeys(Date date);
 
-  public boolean exists(Message msg);
-
-  public boolean exists(ResponseMessage msg) throws ParseException;
+  public boolean exists(Message msg) throws ParseException;
 
   @Override
   public void close();
