@@ -170,6 +170,11 @@ public class RedisStore implements DataStore, AutoCloseable {
     }
   }
 
+  /**
+   * Move the msg to fail.
+   * @param msg
+   * @throws IOException 
+   */
   @Override
   public void setFailed(final Message msg) throws IOException {
     try {
@@ -253,22 +258,40 @@ public class RedisStore implements DataStore, AutoCloseable {
     jedis.flushDB();
   }
 
+  /**
+   * Get the size of the sorted set.
+   * @return 
+   */
   protected long zSize() {
     return jedis.zcard(getZKey());
   }
 
+  /**
+   * Get the key for the sorted set.
+   * @return 
+   */
   protected String getZKey() {
     StringBuilder sb = new StringBuilder(appName);
     sb.append(":uuidByDate");
     return sb.toString();
   }
 
+  /**
+   * Get the key for the failed sorted set.
+   * @return 
+   */
   protected String getFailedZKey() {
     StringBuilder sb = new StringBuilder(appName);
     sb.append(":failedUuidByDate");
     return sb.toString();
   }
 
+  /**
+   * Create our sorted set value.
+   * @param date
+   * @param uuid
+   * @return 
+   */
   protected String getZValue(Date date, String uuid) {
     StringBuilder sb = new StringBuilder();
     sb.append(date.getTime());

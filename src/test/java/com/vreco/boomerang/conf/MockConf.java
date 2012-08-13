@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
+ * Mock configuration file.
  *
  * @author Ben Aldrich
  */
