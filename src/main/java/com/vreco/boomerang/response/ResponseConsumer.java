@@ -3,7 +3,6 @@ package com.vreco.boomerang.response;
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.datastore.DataStore;
 import com.vreco.boomerang.datastore.RedisStore;
-import com.vreco.boomerang.message.BoomerangMessage;
 import com.vreco.boomerang.message.ResponseMessage;
 import com.vreco.util.mq.Consumer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;

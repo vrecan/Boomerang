@@ -1,15 +1,14 @@
 package com.vreco.boomerang.response;
 
 import com.vreco.boomerang.Main;
+import com.vreco.boomerang.TestUtil;
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.conf.MockConf;
 import com.vreco.boomerang.datastore.DataStore;
-import com.vreco.boomerang.TestUtil;
 import com.vreco.boomerang.datastore.RedisStore;
 import com.vreco.boomerang.message.BoomerangMessage;
 import com.vreco.boomerang.message.MockMessage;
 import com.vreco.boomerang.message.ResponseMessage;
-import com.vreco.util.mq.Consumer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -51,29 +50,26 @@ public class ResponseConsumerTest {
 
   /**
    * Test message acknowledgment.
-   * @throws Exception 
+   *
+   * @throws Exception
    */
   @Test
   public void ITTestAcknowledgeMessage() throws Exception {
     String forwardQueue = "TestAckMessage";
     HashMap<Thread, Long> threads = Main.getThreads(conf);
     Main.startThreads(threads);
-    try (Consumer consumer = new Consumer(conf.getValue("mq.connection.url"))) {
-      BoomerangMessage msg = MockMessage.getBasicMessage(conf, forwardQueue);
-      TestUtil.sendBoomerangMessage(msg, conf);
+    BoomerangMessage msg = MockMessage.getBasicMessage(conf, forwardQueue);
+    TestUtil.sendBoomerangMessage(msg, conf);
 
-      BoomerangMessage bMsg = TestUtil.ConsumeMessage(forwardQueue, conf);
-      ResponseMessage rMsg = new ResponseMessage(bMsg.getJsonStringMessage(), conf);
-      rMsg.setSuccess(true);
-      //Did the message make it in the db store?
-      Assert.assertTrue(store.exists(rMsg));
-      TestUtil.sendResponseMessage(rMsg, conf);
-      if (!TestUtil.waitForMessageDeleteInStore(rMsg, store)) {
-        Assert.fail("Message not removed from data store");
-      }
-      this.shutdown.setShutdown(true);
+    BoomerangMessage bMsg = TestUtil.ConsumeMessage(forwardQueue, conf);
+    ResponseMessage rMsg = new ResponseMessage(bMsg.getJsonStringMessage(), conf);
+    rMsg.setSuccess(true);
+    //Did the message make it in the db store?
+    Assert.assertTrue(store.exists(rMsg));
+    TestUtil.sendResponseMessage(rMsg, conf);
+    if (!TestUtil.waitForMessageDeleteInStore(rMsg, store)) {
+      Assert.fail("Message not removed from data store");
     }
+    this.shutdown.setShutdown(true);
   }
-
-
 }

@@ -20,7 +20,7 @@ public class MockMessage {
   }
   
   public static ResponseMessage getBasicResponseSuccess(Conf conf, String date) throws IOException {
-    String json = "{\"" + conf.getValue("boomerang.date.label") + "\":\"" + date + "\",\""+ conf.getValue("boomerang.success.label") +"\":true}";
+    String json = "{\"" + conf.getValue("boomerang.date.label") + "\":\"" + date + "\",\""+ conf.getValue("boomerang.response.success.label") +"\":true}";
     return new ResponseMessage(json, conf);
   }
 }

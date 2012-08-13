@@ -20,11 +20,17 @@ public class MockConf {
     prop.setProperty("mq.processing.queue", "boomerangQ");
     prop.setProperty("data.redis.url", "localhost");
     prop.setProperty("mq.response.queue", "boomerangResponseQ");
+    
+    //Message labels
     prop.setProperty("boomerang.date.label", "boomDate");
     prop.setProperty("boomerang.uuid.label", "boomUuid");
-    prop.setProperty("boomerang.retry.label", "boomRetry");
-    prop.setProperty("boomerang.success.label", "boomSuccess");
+    prop.setProperty("boomerang.retry.label", "boomRetry");   
     prop.setProperty("boomerang.producer.label", "boomQueues");
+    
+    //Response conf options
+    prop.setProperty("boomerang.response.queue.label", "boomRQueue");
+    prop.setProperty("boomerang.response.success.label", "boomSuccess");
+
     prop.setProperty("boomerang.resend.default", "200");
     prop.setProperty("boomerang.producer.ttl.default", "60000");
     prop.setProperty("boomerang.resend.retry", "2");

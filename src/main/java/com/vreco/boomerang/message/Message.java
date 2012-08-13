@@ -3,7 +3,6 @@ package com.vreco.boomerang.message;
 import com.vreco.boomerang.conf.Conf;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
