@@ -1,6 +1,7 @@
 package com.vreco.boomerang;
 
 import com.vreco.boomerang.conf.Conf;
+import com.vreco.boomerang.datastore.DataStore;
 import com.vreco.boomerang.datastore.RedisStore;
 import com.vreco.boomerang.message.Message;
 import com.vreco.util.mq.Producer;
@@ -23,9 +24,7 @@ public class ResendExpired implements Runnable {
 
   final SimpleShutdown shutdown = SimpleShutdown.getInstance();
   final Logger logger = LoggerFactory.getLogger(ResendExpired.class);
-  RedisStore store;
   final Conf conf;
-  Producer producer;
   final long defaultResend;
   final long defaultSendTTL;
 
@@ -40,13 +39,14 @@ public class ResendExpired implements Runnable {
    */
   @Override
   public void run() {
-    producer = new Producer(conf.getValue("mq.connection.url"));
-    store = new RedisStore(conf);
+    Producer producer = new Producer(conf.getValue("mq.connection.url"));
+    DataStore store = new RedisStore(conf);
     while (!shutdown.isShutdown()) {
       try {
-        Collection<Message> oldMessages = getOldMessages();
+        Collection<Message> oldMessages = getOldMessages(store);
         if (!oldMessages.isEmpty()) {
-          resend(oldMessages);
+          failMessages(oldMessages, store);
+          resend(producer, store, oldMessages);
         } else {
           try {
             logger.debug("No messages to resend...");
@@ -61,6 +61,28 @@ public class ResendExpired implements Runnable {
     }
   }
 
+
+  /**
+   * Fail messages that have been tried more then the configured amount of times.
+   * @param msgs
+   * @param store
+   * @throws ParseException
+   * @throws IOException 
+   */
+  protected void failMessages(Collection<Message> msgs, DataStore store) throws ParseException, IOException {
+    ArrayList<Message> remove = new ArrayList(10);
+    for(Message msg: msgs) {
+      if(msg.getRetryCount() >= conf.getIntValue("boomerang.resend.retry", 2)) {
+        //TODO: make this an atomic opperation
+        store.delete(msg);
+        store.setFailed(msg);
+        remove.add(msg);
+      }
+    }
+    msgs.removeAll(remove);
+    
+  }
+
   /**
    * Get the oldest messages out of the data store and compare them against our time resend timer.
    *
@@ -68,7 +90,7 @@ public class ResendExpired implements Runnable {
    * @throws IOException
    * @throws ParseException
    */
-  protected Collection<Message> getOldMessages() throws IOException, ParseException {
+  protected Collection<Message> getOldMessages(DataStore store) throws IOException, ParseException {
     Collection<Message> msgs = store.getLastNMessages(10);
     ArrayList<Message> remove = new ArrayList(10);
     Date now = new Date();
@@ -93,17 +115,17 @@ public class ResendExpired implements Runnable {
    * @throws IOException
    * @throws ParseException
    */
-  protected void resend(Collection<Message> msgs) throws JMSException, IOException, ParseException {
+  protected void resend(Producer producer, DataStore store, Collection<Message> msgs) throws JMSException, IOException, ParseException {
     for (Message msg : msgs) {
       producer.connect("queue", msg.getDestination());
       producer.setUseAsyncSend(true);
       producer.setTTL(defaultSendTTL);
       producer.setPersistence(false);
-      producer.sendMessage(msg.getJsonStringMessage());
 
-      //TODO: build atomic operation to reset the date without the posibility of losing data
       store.delete(msg);
       msg.setDate(new Date());
+      producer.sendMessage(msg.getJsonStringMessage());
+      //TODO: build atomic operation to reset the date without the posibility of losing data
       msg.incrementRetry();
       store.set(msg);
     }

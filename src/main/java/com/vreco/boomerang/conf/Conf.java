@@ -51,7 +51,20 @@ public class Conf {
   public String getValue(String key, String defaultValue) {
     return conf.getProperty(key, defaultValue);
   }
+  
+  /**
+   * Set value.
+   */
+  public void setValue(String key, String value) {
+    conf.setProperty(key, value);
+  }
 
+  /**
+   * get int.
+   * @param key
+   * @param defaultValue
+   * @return 
+   */
   public int getIntValue(String key, int defaultValue) {
     try {
       return Integer.parseInt(conf.getProperty(key));
@@ -60,6 +73,12 @@ public class Conf {
     }
   }
 
+  /**
+   * Get long.
+   * @param key
+   * @param defaultValue
+   * @return 
+   */
   public Long getLongValue(String key, Long defaultValue) {
     try {
       return Long.parseLong(conf.getProperty(key));
