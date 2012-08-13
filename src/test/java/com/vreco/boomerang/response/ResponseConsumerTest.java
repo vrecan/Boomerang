@@ -50,7 +50,7 @@ public class ResponseConsumerTest {
   }
 
   /**
-   * Test message acknowledgement.
+   * Test message acknowledgment.
    * @throws Exception 
    */
   @Test
