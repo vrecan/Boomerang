@@ -16,7 +16,7 @@ public class Message {
   private String uuid;
   private Date date;
   private ArrayList<String> queues = new ArrayList();
-  private static final ObjectMapper mapper = new ObjectMapper();  
+  private final ObjectMapper mapper = new ObjectMapper();  
   protected final SimpleDateFormat msgDateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
   private final Conf conf;
   private Integer RetryCount = 0;
@@ -105,23 +105,24 @@ public class Message {
   }
 
   private void setInternalSuccess() {
-    boolean internalSuccess = false;
-
+//    try {
+//      Object sObject = msg.get(conf.getValue("boomerang.success.label"));
+//      if(sObject instanceof String) {
+//        internalSuccess = Boolean.parseBoolean((String) sObject );
+//      } 
+//      else if(sObject instanceof Boolean) {
+//        internalSuccess = (boolean) sObject;
+//      } else {
+//        throw new IOException("Type not supported");
+//      }
+//    } catch (Exception e) {
+//      internalSuccess = false;
+//    }
     try {
-      Object sObject = msg.get(conf.getValue("boomerang.success.label"));
-      if(sObject instanceof String) {
-        internalSuccess = Boolean.parseBoolean((String) sObject );
-      } 
-      else if(sObject instanceof Boolean) {
-        internalSuccess = (boolean) sObject;
-      } else {
-        throw new IOException("Type not supported");
-      }
+      this.success = (boolean) msg.get(conf.getValue("boomerang.success.label"));    
     } catch (Exception e) {
-      internalSuccess = false;
+      this.success = false;
     }
-    success = internalSuccess;
-    
   }
 
 

@@ -96,7 +96,9 @@ public class ResendExpired implements Runnable {
   protected void resend(Collection<Message> msgs) throws JMSException, IOException, ParseException {
     for (Message msg : msgs) {
       producer.connect("queue", msg.getDestination());
+      producer.setUseAsyncSend(true);
       producer.setTTL(defaultSendTTL);
+      producer.setPersistence(false);
       producer.sendMessage(msg.getJsonStringMessage());
 
       //TODO: build atomic operation to reset the date without the posibility of losing data
