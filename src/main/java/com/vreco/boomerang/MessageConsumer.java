@@ -44,7 +44,9 @@ public class MessageConsumer implements Runnable {
             Message msg = new Message(mqMsg.getText(), conf);
             store.set(msg);
             producer.connect("queue", msg.getDestination());
+            producer.setUseAsyncSend(true);
             producer.setTTL(defaultSendTTL);
+            producer.setPersistence(false);
             producer.sendMessage(msg.getJsonStringMessage());
             mqMsg.acknowledge();
           } catch (JMSException | IOException e) {
