@@ -16,7 +16,7 @@ public class Message {
   private String uuid;
   private Date date;
   private ArrayList<String> queues = new ArrayList();
-  private final ObjectMapper mapper = new ObjectMapper();  
+  private final ObjectMapper mapper = new ObjectMapper();
   protected final SimpleDateFormat msgDateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
   private final Conf conf;
   private Integer RetryCount = 0;
@@ -26,15 +26,18 @@ public class Message {
     this.msg = mapper.readValue(hMsg, HashMap.class);
     this.conf = conf;
 
-    String sQueues = (String) msg.get(conf.getValue("boomerang.producer.label"));
-    if (sQueues != null) {
-      String[] split = sQueues.split(",");
-      queues.addAll(Arrays.asList(split));
-    }
+    setInternalQueues();
     setInternalDate();
     setInternalUuid();
     setInternalRetryCount();
     setInternalSuccess();
+  }
+
+  /**
+   * Set queues in internal message.
+   */
+  private void setInternalQueues() {
+    setQueues((String) msg.get(conf.getValue("boomerang.producer.label")));
   }
 
   /**
@@ -55,11 +58,10 @@ public class Message {
    * Set the date in both objects.
    */
   private void setInternalDate() {
-    date = getInternalDate();
-    if (date == null) {
-      this.date = new Date();
+    this.date = getInternalDate();
+    if (this.date == null) {
+      setDate(new Date());
     }
-    msg.put(conf.getValue("boomerang.date.label"), msgDateFormat.format(date));
   }
 
   /**
@@ -79,16 +81,16 @@ public class Message {
    * Set the uuid in both objects.
    */
   private void setInternalUuid() {
-    uuid = getInternalUuid();
-    if (uuid == null) {
-      this.uuid = UUID.randomUUID().toString();
+    this.uuid = getInternalUuid();
+    if (this.uuid == null) {
+      setUuid(UUID.randomUUID().toString());
     }
-    msg.put(conf.getValue("boomerang.uuid.label"), uuid);
   }
 
   /**
    * get internal retry counter.
-   * @return 
+   *
+   * @return
    */
   private Integer getInternalRetryCount() {
     try {
@@ -104,29 +106,29 @@ public class Message {
    * Set the internal retry counter.
    */
   private void setInternalRetryCount() {
-    RetryCount = getInternalRetryCount();
-    if (RetryCount == null) {
+    this.RetryCount = getInternalRetryCount();
+    if (this.RetryCount == null) {
       this.RetryCount = 0;
+      msg.put(conf.getValue("boomerang.retry.label"), RetryCount);
     }
-    msg.put(conf.getValue("boomerang.retry.label"), RetryCount);
   }
 
   private void setInternalSuccess() {
     try {
-      this.success = (boolean) msg.get(conf.getValue("boomerang.success.label"));    
+      this.success = (boolean) msg.get(conf.getValue("boomerang.success.label"));
     } catch (Exception e) {
       this.success = false;
     }
   }
 
-
   /**
    * Get the internal message as a json String.
+   *
    * @return
-   * @throws IOException 
+   * @throws IOException
    */
   public String getJsonStringMessage() throws IOException {
-    return mapper.writeValueAsString(msg);    
+    return mapper.writeValueAsString(msg);
   }
 
   /**
@@ -151,6 +153,11 @@ public class Message {
   public void setDate(Date date) {
     this.date = date;
     msg.put(conf.getValue("boomerang.date.label"), msgDateFormat.format(date));
+  }
+
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
+    msg.put(conf.getValue("boomerang.uuid.label"), uuid);
   }
 
   /**
@@ -181,8 +188,12 @@ public class Message {
   /**
    * @param queues the queues to set
    */
-  public void setQueues(final ArrayList<String> queues) {
-    this.queues = queues;
+  public void setQueues(final String queue) {
+    if (queue != null) {
+      String[] split = queue.split(",");
+      this.queues.addAll(Arrays.asList(split));
+      msg.put(conf.getValue("boomerang.producer.label"), queue);
+    }
   }
 
   /**
@@ -190,6 +201,16 @@ public class Message {
    */
   public int getRetryCount() {
     return RetryCount;
+  }
+
+  /**
+   * Set retry count
+   *
+   * @param retry
+   */
+  public void setRetryCount(int retry) {
+    this.RetryCount = retry;
+    msg.put(conf.getValue("boomerang.retry.label"), retry);
   }
 
   /**

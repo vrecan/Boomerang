@@ -25,7 +25,7 @@ public class RedisStore implements DataStore, AutoCloseable {
   final Jedis jedis;
   final String appName;
   final Logger logger = LoggerFactory.getLogger(RedisStore.class);
-  final protected SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+  final protected SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
   private final Conf conf;
 
   /**
@@ -151,7 +151,7 @@ public class RedisStore implements DataStore, AutoCloseable {
     try {
       ArrayList<Response<Long>> responses = new ArrayList(2);
       final Date date = msg.getDate();
-      final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
+      final String key = getHashKey(appName, msg.getUuid(), date);
       final String zValue = getZValue(date, msg.getUuid());
       final String zKey = getZKey();
 
@@ -175,7 +175,7 @@ public class RedisStore implements DataStore, AutoCloseable {
     try {
       ArrayList<Response<Long>> responses = new ArrayList(2);
       final Date date = msg.getDate();
-      final String key = getFailedHashKey(appName, msg.getUuid(), msg.getDate());
+      final String key = getFailedHashKey(appName, msg.getUuid(),date);
       final String zValue = getZValue(date, msg.getUuid());
       final String zKey = getFailedZKey();
 
