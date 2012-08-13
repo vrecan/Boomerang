@@ -8,7 +8,6 @@ import com.vreco.boomerang.message.MockMessage;
 import com.vreco.util.mq.Producer;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Properties;
 import org.junit.*;
 
 /**
@@ -102,6 +101,10 @@ public class ResendExpiredTest {
     Assert.assertFalse(store.exists(r2));
   }
 
+  /**
+   * Validate that the resend is obeying the retry counter.
+   * @throws Exception 
+   */
   @Test
   public void testResendRetryCount() throws Exception {
     conf.setValue("boomerang.resend.retry", "1");
