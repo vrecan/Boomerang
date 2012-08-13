@@ -2,7 +2,7 @@ package com.vreco.boomerang;
 
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.conf.MockConf;
-import com.vreco.boomerang.message.Message;
+import com.vreco.boomerang.message.BoomerangMessage;
 import com.vreco.boomerang.message.MockMessage;
 import java.io.IOException;
 import java.util.HashMap;
@@ -45,10 +45,10 @@ public class MessageConsumerTest {
     String forwardQueue = "TestMessageConsumer1, TestMessageConsumer2";
     HashMap<Thread, Long> threads = Main.getThreads(conf);
     Main.startThreads(threads);
-    Message msg = MockMessage.getBasicMessage(conf, forwardQueue);
+    BoomerangMessage msg = MockMessage.getBasicMessage(conf, forwardQueue);
     TestUtil.sendBoomerangMessage(msg, conf);
-    Message ConsumeMessage1 = TestUtil.ConsumeMessage("TestMessageConsumer1", conf);
-    Message ConsumeMessage2 = TestUtil.ConsumeMessage("TestMessageConsumer2", conf);
+    BoomerangMessage ConsumeMessage1 = TestUtil.ConsumeMessage("TestMessageConsumer1", conf);
+    BoomerangMessage ConsumeMessage2 = TestUtil.ConsumeMessage("TestMessageConsumer2", conf);
     Assert.assertNotNull(ConsumeMessage1);
     Assert.assertNotNull(ConsumeMessage2);
     Assert.assertEquals(ConsumeMessage1.getJsonStringMessage(), ConsumeMessage2.getJsonStringMessage());

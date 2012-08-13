@@ -6,8 +6,9 @@ import com.vreco.boomerang.conf.MockConf;
 import com.vreco.boomerang.datastore.DataStore;
 import com.vreco.boomerang.TestUtil;
 import com.vreco.boomerang.datastore.RedisStore;
-import com.vreco.boomerang.message.Message;
+import com.vreco.boomerang.message.BoomerangMessage;
 import com.vreco.boomerang.message.MockMessage;
+import com.vreco.boomerang.message.ResponseMessage;
 import com.vreco.util.mq.Consumer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.IOException;
@@ -58,10 +59,11 @@ public class ResponseConsumerTest {
     HashMap<Thread, Long> threads = Main.getThreads(conf);
     Main.startThreads(threads);
     try (Consumer consumer = new Consumer(conf.getValue("mq.connection.url"))) {
-      Message msg = MockMessage.getBasicMessage(conf, forwardQueue);
+      BoomerangMessage msg = MockMessage.getBasicMessage(conf, forwardQueue);
       TestUtil.sendBoomerangMessage(msg, conf);
 
-      Message rMsg = TestUtil.ConsumeMessage(forwardQueue, conf);
+      BoomerangMessage bMsg = TestUtil.ConsumeMessage(forwardQueue, conf);
+      ResponseMessage rMsg = new ResponseMessage(bMsg.getJsonStringMessage(), conf);
       rMsg.setSuccess(true);
       //Did the message make it in the db store?
       Assert.assertTrue(store.exists(rMsg));

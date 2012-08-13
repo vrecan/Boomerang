@@ -37,7 +37,7 @@ public class MessageTest extends TestCase {
 
     String json = "{\"test\":\"proc\",\"something\":\"uuid\", \"" + conf.getValue("boomerang.producer.label")
             + "\":\"test\"}";
-    Message msg = new Message(json, conf);
+    BoomerangMessage msg = new BoomerangMessage(json, conf);
     Assert.assertEquals("test", msg.getDestination());
     Assert.assertNotNull(msg.getUuid());
   }
@@ -52,7 +52,7 @@ public class MessageTest extends TestCase {
 
     String json = "{\"test\":\"proc\",\"something\":\"uuid\", \"" + conf.getValue("boomerang.producer.label")
             + "\":\"test\", \"" + conf.getValue("boomerang.date.label") + "\":\"" + expDate + "\"}";
-    Message msg = new Message(json, conf);
+    BoomerangMessage msg = new BoomerangMessage(json, conf);
     Assert.assertEquals("test", msg.getDestination());
     Assert.assertNotNull(msg.getUuid());
     Date exp = msg.msgDateFormat.parse(expDate);
@@ -70,7 +70,7 @@ public class MessageTest extends TestCase {
 
     String json = "{\"test\":\"proc\",\"something\":\"uuid\", \"" + conf.getValue("boomerang.producer.label")
             + "\":\"test\", \"" + conf.getValue("boomerang.uuid.label") + "\":\"" + exp + "\"}";
-    Message msg = new Message(json, conf);
+    BoomerangMessage msg = new BoomerangMessage(json, conf);
     Assert.assertEquals("test", msg.getDestination());
     Assert.assertNotNull(msg.getUuid());
     Assert.assertEquals(exp, msg.getUuid());
@@ -82,13 +82,13 @@ public class MessageTest extends TestCase {
    */
   public void testMessageSuccessResponse() throws Exception {
     Date Date = new Date();
-    Message basicResponseSuccess = MockMessage.getBasicResponseSuccess(conf, msgDateFormat.format(Date));
+    ResponseMessage basicResponseSuccess = MockMessage.getBasicResponseSuccess(conf, msgDateFormat.format(Date));
     Assert.assertTrue(basicResponseSuccess.isSuccess());
   }
 
   public void testRawResponseSuccess() throws Exception {
     String json = "{\"boomUuid\":\"0ca14d7a-8b90-42a1-a4ea-999bfcd52d5e\",\"boomQueues\":\"fullcycleQ\",\"boomSuccess\":true,\"boomDate\":\"20120812155553726\",\"boomRetry\":0}";
-    Message msg = new Message(json, conf);
+    ResponseMessage msg = new ResponseMessage(json, conf);
     Assert.assertTrue(msg.isSuccess());
   }
 }

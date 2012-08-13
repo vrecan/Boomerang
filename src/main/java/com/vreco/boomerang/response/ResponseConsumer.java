@@ -3,7 +3,8 @@ package com.vreco.boomerang.response;
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.datastore.DataStore;
 import com.vreco.boomerang.datastore.RedisStore;
-import com.vreco.boomerang.message.Message;
+import com.vreco.boomerang.message.BoomerangMessage;
+import com.vreco.boomerang.message.ResponseMessage;
 import com.vreco.util.mq.Consumer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.IOException;
@@ -37,7 +38,7 @@ public class ResponseConsumer implements Runnable {
         TextMessage mqMsg = consumer.getTextMessage();
         if (mqMsg != null) {
           try {
-            processResponse(new Message(mqMsg.getText(), conf));
+            processResponse(new ResponseMessage(mqMsg.getText(), conf));
             mqMsg.acknowledge();
             logger.debug("finished processing response.");
           } catch (JMSException | IOException e) {
@@ -53,7 +54,11 @@ public class ResponseConsumer implements Runnable {
 
   }
 
-  protected void processResponse(Message msg) {
+  /**
+   * Process a response message.
+   * @param msg 
+   */
+  protected void processResponse(ResponseMessage msg) {
     try {
       logger.debug("processing response...");
       logger.debug("ResponseMsg: {}", msg.getJsonStringMessage());

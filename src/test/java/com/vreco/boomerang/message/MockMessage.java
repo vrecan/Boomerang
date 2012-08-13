@@ -14,13 +14,13 @@ public class MockMessage {
     return "{\"" + conf.getValue("boomerang.producer.label") + "\":\"" + forwardQueue + "\", \"private\":{\"woo\":\"woo\"}, \"something\":\"something\"}";
   }
 
-  public static Message getBasicMessage(Conf conf, String forwardQueue) throws IOException {
+  public static BoomerangMessage getBasicMessage(Conf conf, String forwardQueue) throws IOException {
     String json = "{\"" + conf.getValue("boomerang.producer.label") + "\":\"" + forwardQueue + "\", \"private\":{\"woo\":\"woo\"}, \"something\":\"something\"}";
-    return new Message(json, conf);
+    return new BoomerangMessage(json, conf);
   }
   
-  public static Message getBasicResponseSuccess(Conf conf, String date) throws IOException {
+  public static ResponseMessage getBasicResponseSuccess(Conf conf, String date) throws IOException {
     String json = "{\"" + conf.getValue("boomerang.date.label") + "\":\"" + date + "\",\""+ conf.getValue("boomerang.success.label") +"\":true}";
-    return new Message(json, conf);
+    return new ResponseMessage(json, conf);
   }
 }

@@ -1,5 +1,6 @@
 package com.vreco.boomerang.datastore;
 
+import com.vreco.boomerang.message.BoomerangMessage;
 import com.vreco.boomerang.message.Message;
 import java.io.IOException;
 import java.text.ParseException;
@@ -21,7 +22,7 @@ public interface DataStore extends AutoCloseable {
 
   public String getFailed(Message msg) throws ParseException;
 
-  public Collection<Message> getLastNMessages(final int n) throws IOException, ParseException;
+  public Collection<BoomerangMessage> getLastNMessages(final int n) throws IOException, ParseException;
 
   public void delete(Message msg) throws ParseException;
 

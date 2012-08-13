@@ -1,6 +1,7 @@
 package com.vreco.boomerang.datastore;
 
 import com.vreco.boomerang.conf.Conf;
+import com.vreco.boomerang.message.BoomerangMessage;
 import com.vreco.boomerang.message.Message;
 import java.io.IOException;
 import java.text.ParseException;
@@ -84,15 +85,15 @@ public class RedisStore implements DataStore, AutoCloseable {
   }  
 
   @Override
-  public Collection<Message> getLastNMessages(final int n) throws IOException, ParseException {
-    ArrayList<Message> msgs = new ArrayList();
+  public Collection<BoomerangMessage> getLastNMessages(final int n) throws IOException, ParseException {
+    ArrayList<BoomerangMessage> msgs = new ArrayList();
     Set<String> zrange = jedis.zrange(getZKey(), 0, n);
     for (String dateAndID : zrange) {
       String[] split = dateAndID.split(":");
       String key = getHashKey(appName, split[1], new Date(Long.parseLong(split[0])));
       String jsonMsg = jedis.hget(key, split[1]);
       if (jsonMsg != null) {
-        msgs.add(new Message(jsonMsg, conf));
+        msgs.add(new BoomerangMessage(jsonMsg, conf));
       }
     }
     return msgs;
