@@ -94,8 +94,7 @@ public class Message {
    */
   private Integer getInternalRetryCount() {
     try {
-      String retry = (String) msg.get(conf.getValue("boomerang.retry.label"));
-      return Integer.parseInt(retry);
+      return (Integer) msg.get(conf.getValue("boomerang.retry.label"));
     } catch (Exception e) {
       return null;
     }
@@ -217,7 +216,7 @@ public class Message {
    * Increment the retry counter.
    */
   public void incrementRetry() {
-    this.RetryCount++;
+    this.RetryCount = +1;
     msg.put(conf.getValue("boomerang.retry.label"), RetryCount);
   }
 

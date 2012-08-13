@@ -26,7 +26,12 @@ public class MockConf {
     prop.setProperty("boomerang.producer.label", "boomQueues");
     prop.setProperty("boomerang.resend.default", "200");
     prop.setProperty("boomerang.producer.ttl.default", "60000");
+    prop.setProperty("boomerang.resend.retry", "2");
     conf = new Conf(prop);
+  }
+  
+  public void setValue(String key, String value) {
+    conf.setValue(key, value);
   }
 
 }

@@ -8,6 +8,7 @@ import com.vreco.boomerang.message.MockMessage;
 import com.vreco.util.mq.Producer;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Properties;
 import org.junit.*;
 
 /**
@@ -99,5 +100,25 @@ public class ResendExpiredTest {
 
     Assert.assertFalse(store.exists(r1));
     Assert.assertFalse(store.exists(r2));
+  }
+
+  @Test
+  public void testResendRetryCount() throws Exception {
+    conf.setValue("boomerang.resend.retry", "1");
+    Message m1 = MockMessage.getBasicMessage(conf, "ResendExpired1Q");
+    store.set(m1);
+    re = new ResendExpired(conf);
+    Thread.sleep(200);
+    Collection<Message> oldMessages = re.getOldMessages(store);
+    re.failMessages(oldMessages, store);
+    Assert.assertEquals(1,oldMessages.size());
+    m1.incrementRetry();
+    store.set(m1);
+    oldMessages = re.getOldMessages(store);
+    re.failMessages(oldMessages, store);
+    Assert.assertEquals(0,oldMessages.size());
+    Assert.assertTrue(store.existsFailed(m1));
+    store.deleteFailed(m1);
+    Assert.assertFalse(store.existsFailed(m1));
   }
 }

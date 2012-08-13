@@ -45,6 +45,7 @@ public class ResendExpired implements Runnable {
       try {
         Collection<Message> oldMessages = getOldMessages(store);
         if (!oldMessages.isEmpty()) {
+          failMessages(oldMessages, store);
           resend(producer, store, oldMessages);
         } else {
           try {
@@ -58,6 +59,28 @@ public class ResendExpired implements Runnable {
         logger.error("Failed to resend message", e);
       }
     }
+  }
+
+
+  /**
+   * Fail messages that have been tried more then the configured amount of times.
+   * @param msgs
+   * @param store
+   * @throws ParseException
+   * @throws IOException 
+   */
+  protected void failMessages(Collection<Message> msgs, DataStore store) throws ParseException, IOException {
+    ArrayList<Message> remove = new ArrayList(10);
+    for(Message msg: msgs) {
+      if(msg.getRetryCount() >= conf.getIntValue("boomerang.resend.retry", 2)) {
+        //TODO: make this an atomic opperation
+        store.delete(msg);
+        store.setFailed(msg);
+        remove.add(msg);
+      }
+    }
+    msgs.removeAll(remove);
+    
   }
 
   /**
@@ -98,7 +121,7 @@ public class ResendExpired implements Runnable {
       producer.setUseAsyncSend(true);
       producer.setTTL(defaultSendTTL);
       producer.setPersistence(false);
-      
+
       store.delete(msg);
       msg.setDate(new Date());
       producer.sendMessage(msg.getJsonStringMessage());
