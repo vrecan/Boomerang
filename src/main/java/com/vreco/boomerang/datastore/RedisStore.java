@@ -149,7 +149,7 @@ public class RedisStore implements DataStore, AutoCloseable {
   @Override
   public void set(final Message msg) throws IOException {
     try {
-      ArrayList<Response<Long>> responses = new ArrayList();
+      ArrayList<Response<Long>> responses = new ArrayList(2);
       final Date date = msg.getDate();
       final String key = getHashKey(appName, msg.getUuid(), msg.getDate());
       final String zValue = getZValue(date, msg.getUuid());
@@ -173,7 +173,7 @@ public class RedisStore implements DataStore, AutoCloseable {
   @Override
   public void setFailed(final Message msg) throws IOException {
     try {
-      ArrayList<Response<Long>> responses = new ArrayList();
+      ArrayList<Response<Long>> responses = new ArrayList(2);
       final Date date = msg.getDate();
       final String key = getFailedHashKey(appName, msg.getUuid(), msg.getDate());
       final String zValue = getZValue(date, msg.getUuid());
