@@ -86,6 +86,10 @@ public class Message {
     msg.put(conf.getValue("boomerang.uuid.label"), uuid);
   }
 
+  /**
+   * get internal retry counter.
+   * @return 
+   */
   private Integer getInternalRetryCount() {
     try {
       String retry = (String) msg.get(conf.getValue("boomerang.retry.label"));
@@ -96,6 +100,9 @@ public class Message {
 
   }
 
+  /**
+   * Set the internal retry counter.
+   */
   private void setInternalRetryCount() {
     RetryCount = getInternalRetryCount();
     if (RetryCount == null) {
@@ -105,19 +112,6 @@ public class Message {
   }
 
   private void setInternalSuccess() {
-//    try {
-//      Object sObject = msg.get(conf.getValue("boomerang.success.label"));
-//      if(sObject instanceof String) {
-//        internalSuccess = Boolean.parseBoolean((String) sObject );
-//      } 
-//      else if(sObject instanceof Boolean) {
-//        internalSuccess = (boolean) sObject;
-//      } else {
-//        throw new IOException("Type not supported");
-//      }
-//    } catch (Exception e) {
-//      internalSuccess = false;
-//    }
     try {
       this.success = (boolean) msg.get(conf.getValue("boomerang.success.label"));    
     } catch (Exception e) {
@@ -126,6 +120,11 @@ public class Message {
   }
 
 
+  /**
+   * Get the internal message as a json String.
+   * @return
+   * @throws IOException 
+   */
   public String getJsonStringMessage() throws IOException {
     return mapper.writeValueAsString(msg);    
   }
