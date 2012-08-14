@@ -1,18 +1,15 @@
 package com.vreco.boomerang.response;
 
-import com.vreco.boomerang.Main;
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.conf.MockConf;
 import com.vreco.boomerang.datastore.DataStore;
-import com.vreco.boomerang.TestUtil;
 import com.vreco.boomerang.datastore.RedisStore;
-import com.vreco.boomerang.message.Message;
+import com.vreco.boomerang.message.BoomerangMessage;
 import com.vreco.boomerang.message.MockMessage;
-import com.vreco.util.mq.Consumer;
+import com.vreco.boomerang.message.ResponseMessage;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
 import org.junit.*;
 
 /**
@@ -41,6 +38,7 @@ public class ResponseConsumerTest {
   @Before
   public void setUp() {
     store = new RedisStore(conf);
+    ((RedisStore) store).deleteAll();
   }
 
   @After
@@ -48,30 +46,20 @@ public class ResponseConsumerTest {
     store.close();
   }
 
-  /**
-   * Test message acknowledgement.
-   * @throws Exception 
-   */
   @Test
-  public void ITTestAcknowledgeMessage() throws Exception {
-    String forwardQueue = "TestAckMessage";
-    HashMap<Thread, Long> threads = Main.getThreads(conf);
-    Main.startThreads(threads);
-    try (Consumer consumer = new Consumer(conf.getValue("mq.connection.url"))) {
-      Message msg = MockMessage.getBasicMessage(conf, forwardQueue);
-      TestUtil.sendBoomerangMessage(msg, conf);
-
-      Message rMsg = TestUtil.ConsumeMessage(forwardQueue, conf);
-      rMsg.setSuccess(true);
-      //Did the message make it in the db store?
-      Assert.assertTrue(store.exists(rMsg));
-      TestUtil.sendResponseMessage(rMsg, conf);
-      if (!TestUtil.waitForMessageDeleteInStore(rMsg, store)) {
-        Assert.fail("Message not removed from data store");
-      }
-      this.shutdown.setShutdown(true);
-    }
+  public void TestMultipleQueueResponse() throws Exception {
+    String queues = "testMultipleResponse1Q, testMultipleResponse2Q";
+    BoomerangMessage storeMsg = MockMessage.getBasicMessage(conf, queues);
+    store.set(storeMsg);
+    ResponseMessage r = new ResponseMessage(storeMsg.getJsonStringMessage(), conf);
+    r.setResponseQueue("testMultipleResponse1Q");
+    r.setSuccess(true);
+    String get = store.get(r);
+    store.updateOrDelete(r);
+    //Message should still exist because there are multiple queues.
+    Assert.assertTrue(store.exists(r));
+    r.setResponseQueue("testMultipleResponse2Q");
+    store.updateOrDelete(r);
+    Assert.assertFalse(store.exists(r));
   }
-
-
 }

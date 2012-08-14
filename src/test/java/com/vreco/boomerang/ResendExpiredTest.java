@@ -3,12 +3,11 @@ package com.vreco.boomerang;
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.conf.MockConf;
 import com.vreco.boomerang.datastore.RedisStore;
-import com.vreco.boomerang.message.Message;
+import com.vreco.boomerang.message.BoomerangMessage;
 import com.vreco.boomerang.message.MockMessage;
 import com.vreco.util.mq.Producer;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Properties;
 import org.junit.*;
 
 /**
@@ -55,14 +54,14 @@ public class ResendExpiredTest {
   @Test
   public void testGetOldMessages() throws Exception {
 
-    Message m1 = MockMessage.getBasicMessage(conf, "ResendExpired1Q");
-    Message m2 = MockMessage.getBasicMessage(conf, "ResendExpired2Q");
+    BoomerangMessage m1 = MockMessage.getBasicMessage(conf, "ResendExpired1Q");
+    BoomerangMessage m2 = MockMessage.getBasicMessage(conf, "ResendExpired2Q");
     store.set(m1);
     store.set(m2);
 
     //Default timeout to be old is set to 200ms
     Thread.sleep(200);
-    Collection<Message> oldMessages = re.getOldMessages(store);
+    Collection<BoomerangMessage> oldMessages = re.getOldMessages(store);
     store.delete(m1);
     store.delete(m2);
     Assert.assertEquals(2, oldMessages.size());
@@ -73,14 +72,14 @@ public class ResendExpiredTest {
    */
   @Test
   public void testResend() throws Exception {
-    Message m1 = MockMessage.getBasicMessage(conf, "ResendExpired1Q");
-    Message m2 = MockMessage.getBasicMessage(conf, "ResendExpired2Q");
+    BoomerangMessage m1 = MockMessage.getBasicMessage(conf, "ResendExpired1Q");
+    BoomerangMessage m2 = MockMessage.getBasicMessage(conf, "ResendExpired2Q");
     store.set(m1);
     store.set(m2);
 
     //Default timeout to be old is set to 200ms
     Thread.sleep(200);
-    Collection<Message> oldMessages = re.getOldMessages(store);
+    Collection<BoomerangMessage> oldMessages = re.getOldMessages(store);
     re.resend(producer, store, oldMessages);
 
 
@@ -89,8 +88,8 @@ public class ResendExpiredTest {
     Assert.assertFalse(store.exists(m2));
 
     //consume messages and validate that they exist in our store
-    Message r1 = TestUtil.ConsumeMessage("ResendExpired1Q", conf);
-    Message r2 = TestUtil.ConsumeMessage("ResendExpired2Q", conf);
+    BoomerangMessage r1 = TestUtil.ConsumeMessage("ResendExpired1Q", conf);
+    BoomerangMessage r2 = TestUtil.ConsumeMessage("ResendExpired2Q", conf);
     System.out.println(r1.getJsonStringMessage());
     System.out.println(r2.getJsonStringMessage());
     Assert.assertTrue(store.exists(r1));
@@ -102,14 +101,18 @@ public class ResendExpiredTest {
     Assert.assertFalse(store.exists(r2));
   }
 
+  /**
+   * Validate that the resend is obeying the retry counter.
+   * @throws Exception 
+   */
   @Test
   public void testResendRetryCount() throws Exception {
     conf.setValue("boomerang.resend.retry", "1");
-    Message m1 = MockMessage.getBasicMessage(conf, "ResendExpired1Q");
+    BoomerangMessage m1 = MockMessage.getBasicMessage(conf, "ResendExpired1Q");
     store.set(m1);
     re = new ResendExpired(conf);
     Thread.sleep(200);
-    Collection<Message> oldMessages = re.getOldMessages(store);
+    Collection<BoomerangMessage> oldMessages = re.getOldMessages(store);
     re.failMessages(oldMessages, store);
     Assert.assertEquals(1,oldMessages.size());
     m1.incrementRetry();

@@ -3,7 +3,7 @@ package com.vreco.boomerang;
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.datastore.DataStore;
 import com.vreco.boomerang.datastore.RedisStore;
-import com.vreco.boomerang.message.Message;
+import com.vreco.boomerang.message.BoomerangMessage;
 import com.vreco.util.mq.Consumer;
 import com.vreco.util.mq.Producer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
@@ -41,7 +41,7 @@ public class MessageConsumer implements Runnable {
         TextMessage mqMsg = consumer.getTextMessage();
         if (mqMsg != null) {
           try {
-            Message msg = new Message(mqMsg.getText(), conf);
+            BoomerangMessage msg = new BoomerangMessage(mqMsg.getText(), conf);
             store.set(msg);
             producer.connect("queue", msg.getDestination());
             producer.setUseAsyncSend(true);

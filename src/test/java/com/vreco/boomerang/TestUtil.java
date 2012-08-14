@@ -2,6 +2,7 @@ package com.vreco.boomerang;
 
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.datastore.DataStore;
+import com.vreco.boomerang.message.BoomerangMessage;
 import com.vreco.boomerang.message.Message;
 import com.vreco.util.mq.Consumer;
 import com.vreco.util.mq.Producer;
@@ -42,7 +43,7 @@ public class TestUtil {
    * @throws JMSException
    * @throws IOException 
    */
-  public static void sendBoomerangMessage(Message msg, Conf conf) throws JMSException, IOException {
+  public static void sendBoomerangMessage(BoomerangMessage msg, Conf conf) throws JMSException, IOException {
     try (Producer producer = new Producer(conf.getValue("mq.connection.url"))) {
       producer.connect("queue", conf.getValue("mq.processing.queue"));
       producer.setPersistence(false);
@@ -72,7 +73,7 @@ public class TestUtil {
    * @throws JMSException
    * @throws IOException 
    */
-  public static Message ConsumeMessage(String queue, Conf conf) throws JMSException, IOException {
+  public static BoomerangMessage ConsumeMessage(String queue, Conf conf) throws JMSException, IOException {
     try (Consumer consumer = new Consumer(conf.getValue("mq.connection.url"))) {
      consumer.setTimeout(2000);
       consumer.connect("queue", queue);
@@ -82,7 +83,7 @@ public class TestUtil {
       }
       System.out.println(mqMsg.getText());
       mqMsg.acknowledge();
-      return new Message(mqMsg.getText(), conf);
+      return new BoomerangMessage(mqMsg.getText(), conf);
     }
   }  
 }
