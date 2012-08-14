@@ -3,7 +3,6 @@ package com.vreco.boomerang.message;
 import com.vreco.boomerang.conf.Conf;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  *
@@ -11,7 +10,7 @@ import java.util.Arrays;
  */
 public class BoomerangMessage extends Message {
 
-  private Integer RetryCount = 0;
+  private int RetryCount = 0;
   private ArrayList<String> queues = new ArrayList();
 
   public BoomerangMessage(String hMsg, final Conf conf) throws IOException {
@@ -46,10 +45,12 @@ public class BoomerangMessage extends Message {
    * Set the internal retry counter.
    */
   private void setInternalRetryCount() {
-    this.RetryCount = getInternalRetryCount();
-    if (this.RetryCount == null) {
+    Integer retry = getInternalRetryCount();
+    if (retry == null) {
       this.RetryCount = 0;
       msg.put(conf.getValue("boomerang.retry.label"), RetryCount);
+    } else {
+      this.RetryCount = retry;
     }
   }
 
@@ -130,7 +131,7 @@ public class BoomerangMessage extends Message {
    * Increment the retry counter.
    */
   public void incrementRetry() {
-    this.RetryCount = +1;
+    this.RetryCount ++;
     msg.put(conf.getValue("boomerang.retry.label"), RetryCount);
   }
 }
