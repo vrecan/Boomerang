@@ -46,6 +46,7 @@ public final class Main {
     }
 
     gracefulShutdown(shutdown, threads);
+    logger.info("Finished shutdown");
   }
 
   /**
