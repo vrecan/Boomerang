@@ -3,7 +3,7 @@ package com.vreco.boomerang.response;
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.datastore.DataStore;
 import com.vreco.boomerang.datastore.RedisStore;
-import com.vreco.boomerang.message.Message;
+import com.vreco.boomerang.message.ResponseMessage;
 import com.vreco.util.mq.Consumer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.IOException;
@@ -37,7 +37,7 @@ public class ResponseConsumer implements Runnable {
         TextMessage mqMsg = consumer.getTextMessage();
         if (mqMsg != null) {
           try {
-            processResponse(new Message(mqMsg.getText(), conf));
+            processResponse(new ResponseMessage(mqMsg.getText(), conf), store);
             mqMsg.acknowledge();
             logger.debug("finished processing response.");
           } catch (JMSException | IOException e) {
@@ -53,16 +53,18 @@ public class ResponseConsumer implements Runnable {
 
   }
 
-  protected void processResponse(Message msg) {
+  /**
+   * Process a response message.
+   * @param msg 
+   */
+  protected void processResponse(ResponseMessage msg, DataStore store) {
     try {
       logger.debug("processing response...");
       logger.debug("ResponseMsg: {}", msg.getJsonStringMessage());
       logger.debug("Response Date: {}",msg.getDate());
       logger.debug("Response Success: {}",msg.isSuccess());
       if (msg.isSuccess() && msg.getDate() != null) {
-        String result = store.get(msg);
-        logger.debug("deleting: {}", result);
-        store.delete(msg);
+        store.updateOrDelete(msg);
       }
       //TODO: Deal with other cases other then succes msg.
     } catch (Exception e) {

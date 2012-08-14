@@ -2,7 +2,8 @@ package com.vreco.boomerang.datastore;
 
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.conf.MockConf;
-import com.vreco.boomerang.message.Message;
+import com.vreco.boomerang.message.BoomerangMessage;
+import com.vreco.boomerang.message.ResponseMessage;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -51,7 +52,7 @@ public class RedisStoreTest {
   public void testSetExistDeleteMessage() throws Exception {
 
     String json = "{}";
-    Message msg = new Message(json, conf);
+    BoomerangMessage msg = new BoomerangMessage(json, conf);
     store.set(msg);
     Assert.assertNotNull(store.get(msg));
     Assert.assertTrue(store.exists(msg));
@@ -67,13 +68,14 @@ public class RedisStoreTest {
   public void testSetExistDeleteResponseMessage() throws Exception {
 
     String json = "{}";
-    Message msg = new Message(json, conf);
+    BoomerangMessage msg = new BoomerangMessage(json, conf);
     store.set(msg);
-    msg.setSuccess(true);   
-    Assert.assertNotNull(store.get(msg));
-    Assert.assertTrue(store.exists(msg));
-    store.delete(msg);
-    Assert.assertFalse(store.exists(msg));
+    ResponseMessage rm = new ResponseMessage(msg.getJsonStringMessage(), conf);
+    rm.setSuccess(true);
+    Assert.assertNotNull(store.get(rm));
+    Assert.assertTrue(store.exists(rm));
+    store.delete(rm);
+    Assert.assertFalse(store.exists(rm));
     Assert.assertEquals(0, store.zSize());
   }
 

@@ -3,7 +3,7 @@ package com.vreco.boomerang;
 import com.vreco.boomerang.conf.Conf;
 import com.vreco.boomerang.datastore.DataStore;
 import com.vreco.boomerang.datastore.RedisStore;
-import com.vreco.boomerang.message.Message;
+import com.vreco.boomerang.message.BoomerangMessage;
 import com.vreco.util.mq.Producer;
 import com.vreco.util.shutdownhooks.SimpleShutdown;
 import java.io.IOException;
@@ -43,7 +43,7 @@ public class ResendExpired implements Runnable {
     DataStore store = new RedisStore(conf);
     while (!shutdown.isShutdown()) {
       try {
-        Collection<Message> oldMessages = getOldMessages(store);
+        Collection<BoomerangMessage> oldMessages = getOldMessages(store);
         if (!oldMessages.isEmpty()) {
           failMessages(oldMessages, store);
           resend(producer, store, oldMessages);
@@ -61,18 +61,18 @@ public class ResendExpired implements Runnable {
     }
   }
 
-
   /**
    * Fail messages that have been tried more then the configured amount of times.
+   *
    * @param msgs
    * @param store
    * @throws ParseException
-   * @throws IOException 
+   * @throws IOException
    */
-  protected void failMessages(Collection<Message> msgs, DataStore store) throws ParseException, IOException {
-    ArrayList<Message> remove = new ArrayList(10);
-    for(Message msg: msgs) {
-      if(msg.getRetryCount() >= conf.getIntValue("boomerang.resend.retry", 2)) {
+  protected void failMessages(Collection<BoomerangMessage> msgs, DataStore store) throws ParseException, IOException {
+    ArrayList<BoomerangMessage> remove = new ArrayList(10);
+    for (BoomerangMessage msg : msgs) {
+      if (msg.getRetryCount() >= conf.getIntValue("boomerang.resend.retry", 2)) {
         //TODO: make this an atomic opperation
         store.delete(msg);
         store.setFailed(msg);
@@ -80,7 +80,7 @@ public class ResendExpired implements Runnable {
       }
     }
     msgs.removeAll(remove);
-    
+
   }
 
   /**
@@ -90,13 +90,13 @@ public class ResendExpired implements Runnable {
    * @throws IOException
    * @throws ParseException
    */
-  protected Collection<Message> getOldMessages(DataStore store) throws IOException, ParseException {
-    Collection<Message> msgs = store.getLastNMessages(10);
-    ArrayList<Message> remove = new ArrayList(10);
+  protected Collection<BoomerangMessage> getOldMessages(DataStore store) throws IOException, ParseException {
+    Collection<BoomerangMessage> msgs = store.getLastNMessages(10);
+    ArrayList<BoomerangMessage> remove = new ArrayList(10);
     Date now = new Date();
     Date dateThreshold = new Date(now.getTime() - defaultResend);
 
-    for (Message msg : msgs) {
+    for (BoomerangMessage msg : msgs) {
       Date msgDate = msg.getDate();
       boolean youngerThenThreshold = dateThreshold.before(msgDate);
       if (youngerThenThreshold) {
@@ -115,19 +115,20 @@ public class ResendExpired implements Runnable {
    * @throws IOException
    * @throws ParseException
    */
-  protected void resend(Producer producer, DataStore store, Collection<Message> msgs) throws JMSException, IOException, ParseException {
-    for (Message msg : msgs) {
+  protected void resend(Producer producer, DataStore store, Collection<BoomerangMessage> msgs) throws JMSException, IOException, ParseException {
+    for (BoomerangMessage msg : msgs) {
       producer.connect("queue", msg.getDestination());
       producer.setUseAsyncSend(true);
       producer.setTTL(defaultSendTTL);
       producer.setPersistence(false);
-
-      store.delete(msg);
-      msg.setDate(new Date());
-      producer.sendMessage(msg.getJsonStringMessage());
-      //TODO: build atomic operation to reset the date without the posibility of losing data
-      msg.incrementRetry();
-      store.set(msg);
+      BoomerangMessage newMsg = new BoomerangMessage(msg.getJsonStringMessage(), conf);
+      
+      //reset the date and inrement our retry.
+      newMsg.setDate(new Date());
+      newMsg.incrementRetry();
+      
+      producer.sendMessage(newMsg.getJsonStringMessage());
+      store.update(msg, newMsg);
     }
   }
 }
