@@ -63,5 +63,8 @@ public class ResponseMessage extends Message {
     this.responseQueue = queue;
     msg.put(conf.getValue("boomerang.response.queue.label"), this.responseQueue);
   }
-
+  
+  public String getResponseQueue() {
+    return this.responseQueue;
+  }
 }

@@ -28,8 +28,6 @@ public class BoomerangMessage extends Message {
     setQueues((String) msg.get(conf.getValue("boomerang.producer.label")));
   }
 
-
-
   /**
    * get internal retry counter.
    *
@@ -54,7 +52,6 @@ public class BoomerangMessage extends Message {
       msg.put(conf.getValue("boomerang.retry.label"), RetryCount);
     }
   }
-
 
   /**
    * @return the queues
@@ -87,9 +84,29 @@ public class BoomerangMessage extends Message {
   public void setQueues(final String queue) {
     if (queue != null) {
       String[] split = queue.split(",");
-      this.queues.addAll(Arrays.asList(split));
+      for(String q : split) {
+        this.queues.add(q.trim());
+      }
       msg.put(conf.getValue("boomerang.producer.label"), queue);
     }
+  }
+
+  /**
+   * @param queues the queues to set
+   */
+  public void setQueues(final ArrayList<String> queues) {
+    this.queues = queues;
+    StringBuilder sb = new StringBuilder();
+    int count = 1;
+    int size = queues.size();
+    for (String q : queues) {
+      sb.append(q);
+      if (count < size) {
+        sb.append(",");
+      }
+      count++;
+    }
+    msg.put(conf.getValue("boomerang.producer.label"), sb.toString());
   }
 
   /**

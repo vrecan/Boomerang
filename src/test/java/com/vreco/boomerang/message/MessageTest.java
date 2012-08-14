@@ -67,7 +67,6 @@ public class MessageTest extends TestCase {
 
     String exp = "abc-2352627-6";
 
-
     String json = "{\"test\":\"proc\",\"something\":\"uuid\", \"" + conf.getValue("boomerang.producer.label")
             + "\":\"test\", \"" + conf.getValue("boomerang.uuid.label") + "\":\"" + exp + "\"}";
     BoomerangMessage msg = new BoomerangMessage(json, conf);
@@ -82,12 +81,16 @@ public class MessageTest extends TestCase {
    */
   public void testMessageSuccessResponse() throws Exception {
     Date Date = new Date();
-    ResponseMessage basicResponseSuccess = MockMessage.getBasicResponseSuccess(conf, msgDateFormat.format(Date));
+    ResponseMessage basicResponseSuccess = MockMessage.getBasicResponseSuccess(conf, msgDateFormat.format(Date), "fakeQ");
     Assert.assertTrue(basicResponseSuccess.isSuccess());
   }
 
+  /**
+   * Test response message parsing.
+   * @throws Exception 
+   */
   public void testRawResponseSuccess() throws Exception {
-    String json = "{\"boomUuid\":\"0ca14d7a-8b90-42a1-a4ea-999bfcd52d5e\",\"boomQueues\":\"fullcycleQ\",\"boomSuccess\":true,\"boomDate\":\"20120812155553726\",\"boomRetry\":0}";
+    String json = "{\"boomUuid\":\"0ca14d7a-8b90-42a1-a4ea-999bfcd52d5e\",\"boomRQueue\":\"fullcycleQ\",\"boomSuccess\":true,\"boomDate\":\"20120812155553726\",\"boomRetry\":0}";
     ResponseMessage msg = new ResponseMessage(json, conf);
     Assert.assertTrue(msg.isSuccess());
   }

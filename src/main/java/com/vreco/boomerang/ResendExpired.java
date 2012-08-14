@@ -121,13 +121,14 @@ public class ResendExpired implements Runnable {
       producer.setUseAsyncSend(true);
       producer.setTTL(defaultSendTTL);
       producer.setPersistence(false);
-
-      store.delete(msg);
-      msg.setDate(new Date());
-      producer.sendMessage(msg.getJsonStringMessage());
-      //TODO: build atomic operation to reset the date without the posibility of losing data
-      msg.incrementRetry();
-      store.set(msg);
+      BoomerangMessage newMsg = new BoomerangMessage(msg.getJsonStringMessage(), conf);
+      
+      //reset the date and inrement our retry.
+      newMsg.setDate(new Date());
+      newMsg.incrementRetry();
+      
+      producer.sendMessage(newMsg.getJsonStringMessage());
+      store.update(msg, newMsg);
     }
   }
 }

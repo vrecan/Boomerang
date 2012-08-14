@@ -33,7 +33,7 @@ public class MockConf {
 
     prop.setProperty("boomerang.resend.default", "200");
     prop.setProperty("boomerang.producer.ttl.default", "60000");
-    prop.setProperty("boomerang.resend.retry", "2");
+    prop.setProperty("boomerang.resend.retry", "0");
     conf = new Conf(prop);
   }
   
