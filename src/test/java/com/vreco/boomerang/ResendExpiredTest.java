@@ -107,19 +107,31 @@ public class ResendExpiredTest {
    */
   @Test
   public void testResendRetryCount() throws Exception {
-    conf.setValue("boomerang.resend.retry", "1");
+    conf.setValue("boomerang.resend.retry", "2");
     BoomerangMessage m1 = MockMessage.getBasicMessage(conf, "ResendExpired1Q");
     store.set(m1);
     re = new ResendExpired(conf);
+    //Sleep 200 ms in conf for resend default timer
     Thread.sleep(200);
     Collection<BoomerangMessage> oldMessages = re.getOldMessages(store);
     re.failMessages(oldMessages, store);
     Assert.assertEquals(1,oldMessages.size());
+    
+    //increment and store to simulate one resend
     m1.incrementRetry();
     store.set(m1);
     oldMessages = re.getOldMessages(store);
     re.failMessages(oldMessages, store);
+    Assert.assertEquals(1,oldMessages.size());
+    
+    //increment and store to simulate 2nd resend
+    m1.incrementRetry();
+    store.set(m1);
+    oldMessages = re.getOldMessages(store);
+    re.failMessages(oldMessages, store);    
     Assert.assertEquals(0,oldMessages.size());
+    
+    //validate it has a failed key and delete
     Assert.assertTrue(store.existsFailed(m1));
     store.deleteFailed(m1);
     Assert.assertFalse(store.existsFailed(m1));
